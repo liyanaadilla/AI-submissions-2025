@@ -1,0 +1,430 @@
+================================================================================
+                    YSMAI PROJECT - PERSON A WORK PLAN
+                    KHUBAIB - BACKEND & LOGIC OWNER
+================================================================================
+
+PROJECT OVERVIEW:
+  Real-time HVAC monitoring system with temperature simulation, state management,
+  scheduling, and fault injection. Backend exposes stable Python API; UI consumes
+  via Streamlit.
+
+================================================================================
+DAY 1: CORE SIMULATOR, AGENT, SCHEDULER + TESTS
+================================================================================
+
+DELIVERABLES:
+  ✓ TemperatureSimulator class with warmup + drift logic
+  ✓ YSMAI_Agent class with 3-state FSM + debounce with timestamps
+  ✓ Scheduler class with min-heap task queue
+  ✓ Unit tests for each module
+  ✓ Integration tests (simulator → agent → scheduler chain)
+  ✓ API contract specification (JSON schema) shared with Nafis
+  ✓ Sample JSON traces for UI consumption
+
+DETAILED TASKS:
+
+[MORNING - 2-3 hours]
+
+1. TemperatureSimulator Module
+   - Class: TemperatureSimulator
+   - Constructor params: initial_temp, warmup_duration_sec, drift_rate
+   - Methods:
+     * tick(elapsed_time_sec) → float (current temp)
+     * set_fault_mode(enabled: bool, magnitude: float) → None
+     * reset() → None
+   - Behavior:
+     * Warmup phase: ramp from initial_temp at constant rate for warmup_duration_sec
+     * Drift phase: after warmup, add ±drift_rate per second (simulate aging)
+     * Fault mode: inject random spikes/dips when enabled (magnitude param)
+   - Output: Temperature value in °F (range 50–120)
+   - File: simulator.py
+   - Unit tests:
+     * test_warmup_ramp (verify linear rise over duration)
+     * test_drift_behavior (verify drift accumulates)
+     * test_fault_spike (verify magnitude applied correctly)
+     * test_reset (verify state reset to initial)
+
+2. YSMAI_Agent Module
+   - Class: YSMAI_Agent
+   - Constructor params: threshold_high, threshold_low, debounce_sec
+   - States: [NORMAL, ALERT_HIGH, ALERT_LOW]
+   - Methods:
+     * update(temp: float, timestamp_unix: float) → {state, changed, alert_msg}
+     * get_state() → str
+     * get_timestamp() → float
+   - Behavior:
+     * Debounce: state transitions only if condition persists for debounce_sec
+     * Track last_transition_time (unix timestamp)
+     * Transition logic:
+       - NORMAL → ALERT_HIGH if temp > threshold_high for debounce_sec
+       - NORMAL → ALERT_LOW if temp < threshold_low for debounce_sec
+       - ALERT_* → NORMAL if temp returns to safe zone for debounce_sec
+     * Return alert_msg only on state change (not every tick)
+   - File: agent.py
+   - Unit tests:
+     * test_debounce_high_threshold (verify state doesn't jump on single spike)
+     * test_debounce_expiry (verify transition after debounce expires)
+     * test_state_hysteresis (verify stable state maintained)
+     * test_timestamp_tracking (verify timestamps correct)
+
+3. Scheduler Module
+   - Class: Scheduler
+   - Constructor params: (none initially)
+   - Methods:
+     * add_task(task_id: str, due_time_unix: float, payload: dict) → None
+     * pop_due_tasks(current_time_unix: float) → list of {task_id, payload}
+     * clear() → None
+   - Implementation: min-heap (use heapq)
+   - Behavior:
+     * Tasks stored by (due_time, task_id) for ordering
+     * pop_due_tasks() returns all tasks with due_time <= current_time
+     * Suitable for: persistence checks, data logging, email alerts
+   - File: scheduler.py
+   - Unit tests:
+     * test_task_ordering (verify min-heap returns earliest first)
+     * test_pop_due_tasks (verify correct filtering by time)
+     * test_empty_queue (verify graceful handling)
+
+[AFTERNOON - 3-4 hours]
+
+4. Integration Test Suite
+   - File: test_integration.py
+   - Test scenario: Full 10-second simulation
+     * Initialize simulator (60°F, 5-sec warmup, 0.5°F/sec drift)
+     * Initialize agent (threshold_high=85, threshold_low=50, debounce=1.5)
+     * Initialize scheduler with 3 sample tasks
+     * Run tick loop: every 0.5 sec for 10 sec
+     * Verify:
+       - Simulator ramps up, then drifts
+       - Agent transitions states at correct temps
+       - Scheduler pops tasks at correct times
+       - Alert messages generated only on state change
+
+5. API Contract Specification
+   - File: API_CONTRACT.txt
+   - Define JSON schema for tick() response:
+     {
+       "timestamp": float (unix),
+       "temperature": float (°F),
+       "state": str (NORMAL|ALERT_HIGH|ALERT_LOW),
+       "state_changed": bool,
+       "alert_message": str or null,
+       "scheduled_tasks": [
+         {
+           "task_id": str,
+           "payload": object
+         }
+       ],
+       "simulation_time": float (elapsed seconds)
+     }
+   - Document thresholds:
+     * threshold_high: 85°F (default)
+     * threshold_low: 50°F (default)
+     * debounce: 1.5 sec (default)
+     * drift_rate: 0.5°F per minute (default)
+
+6. Sample JSON Traces
+   - File: sample_traces.json
+   - Generate 3 example traces:
+     * Scenario 1: Normal operation (no faults, stable temps)
+     * Scenario 2: High-temp alert with recovery
+     * Scenario 3: Fault injection → rapid oscillation
+   - Each trace: array of 20 tick outputs, human-readable with comments
+
+[END OF DAY 1 - HANDOFF TO NAFIS]
+
+DELIVERABLE CHECKLIST:
+  ☐ simulator.py (complete with docstrings)
+  ☐ agent.py (complete with docstrings)
+  ☐ scheduler.py (complete with docstrings)
+  ☐ test_integration.py (all tests passing)
+  ☐ API_CONTRACT.txt (frozen schema)
+  ☐ sample_traces.json (3 scenarios)
+  ☐ Message Nafis with API summary + JSON schema
+
+================================================================================
+DAY 2 AM: PYTHON API + SAMPLE DATA PUSH
+================================================================================
+
+DELIVERABLES:
+  ✓ Main simulation loop class (SimulationController)
+  ✓ One-step tick() API method
+  ✓ JSON serialization for all outputs
+  ✓ Persistence task scheduling logic
+  ✓ Sample data batch (JSON array) for UI testing
+  ✓ README with API usage examples
+
+DETAILED TASKS:
+
+[MORNING - 3 hours]
+
+1. SimulationController Class
+   - File: controller.py (or main simulation file)
+   - Constructor params:
+     * initial_temp, warmup_duration, drift_rate
+     * threshold_high, threshold_low, debounce_sec
+     * update_interval_sec (default 0.5)
+   - Instance state:
+     * simulator, agent, scheduler (from Day 1 modules)
+     * current_time (simulation time)
+     * fault_injection_enabled, fault_magnitude
+   - Methods:
+     * tick() → dict (as per API_CONTRACT.txt)
+     * set_fault_injection(enabled: bool, magnitude: float) → None
+     * reset_simulation() → None
+   - Behavior:
+     * Each tick() increments simulation time by update_interval_sec
+     * Calls simulator.tick(), agent.update(), scheduler.pop_due_tasks()
+     * Assembles response dict with all outputs
+     * Returns JSON-serializable output
+
+2. Persistence Task Scheduling
+   - Add to SimulationController.tick():
+     * Auto-schedule "persistence" task every 5 seconds
+     * Task payload: {timestamp, temp, state} snapshot
+     * scheduler.pop_due_tasks() returns accumulated persistence records
+     * Verify in integration test: persistence records appear in tick() output
+
+3. Sample Data Generation
+   - File: generate_samples.py (or within test file)
+   - Generate 3 JSON arrays:
+     * normal_run_100_ticks.json (100 ticks, stable temps)
+     * alert_scenario_100_ticks.json (triggers high/low alerts)
+     * fault_injection_50_ticks.json (fault mode on, rapid changes)
+   - Each entry: full tick() response dict
+   - Save to: samples/ folder (create if needed)
+   - Include metadata comment: start time, thresholds, description
+
+4. API Usage Examples
+   - File: API_EXAMPLES.txt or in README
+   - Python example:
+     ```python
+     from controller import SimulationController
+     
+     ctrl = SimulationController(
+         initial_temp=60,
+         warmup_duration=5,
+         drift_rate=0.5,
+         threshold_high=85,
+         threshold_low=50,
+         debounce_sec=1.5
+     )
+     
+     for i in range(100):
+         result = ctrl.tick()
+         print(f"Time: {result['timestamp']}, Temp: {result['temperature']}°F, State: {result['state']}")
+         if result['state_changed']:
+             print(f"  ALERT: {result['alert_message']}")
+     ```
+   - Explain fault injection:
+     ```python
+     ctrl.set_fault_injection(enabled=True, magnitude=10.0)
+     ```
+
+[END OF DAY 2 AM - HAND OFF TO NAFIS]
+
+DELIVERABLE CHECKLIST:
+  ☐ controller.py (SimulationController complete)
+  ☐ generate_samples.py or integration test extended
+  ☐ samples/normal_run_100_ticks.json
+  ☐ samples/alert_scenario_100_ticks.json
+  ☐ samples/fault_injection_50_ticks.json
+  ☐ API_EXAMPLES.txt with usage code
+  ☐ README updated with API intro + links to examples
+  ☐ Message Nafis: "API ready, samples in samples/ folder, all JSON validated"
+
+================================================================================
+DAY 2 PM: INTEGRATION SUPPORT & MONITORING
+================================================================================
+
+STRATEGY: Parallel work with Nafis; available for quick fixes, schema questions.
+
+TASKS (as needed):
+
+1. Monitor Nafis's integration progress
+   - Be available for Slack/call if Nafis hits API issues
+   - Verify mock fallback data matches schema (no surprise deviations)
+
+2. Prepare for end-of-day sync (15 min)
+   - Note any API tweaks requested by UI
+   - Prepare quick demo: run 1-minute sim, show tick() output
+   - List any remaining blockers
+
+DELIVERABLE CHECKLIST:
+  ☐ Responsive to Nafis's integration questions
+  ☐ API remains stable (no breaking changes unless agreed)
+  ☐ Demo ready for Day 2 PM sync
+
+================================================================================
+DAY 3: BUGFIX, TUNING, FINALIZATION
+================================================================================
+
+DELIVERABLES:
+  ✓ Bugs from UI integration resolved
+  ✓ Threshold/drift tuning complete
+  ✓ Persistence timing validated
+  ✓ API stability maintained
+  ✓ Final test run (5+ minutes, no crashes)
+  ✓ Code cleanup + final README
+
+DETAILED TASKS:
+
+[MORNING - 2 hours]
+
+1. Bugfix Triage
+   - Review blockers list from Day 2 PM sync
+   - Prioritize:
+     * Crashes/exceptions → fix immediately
+     * API contract violations → fix + notify Nafis
+     * Performance issues → profile + optimize
+     * Minor tweaks → batch and test together
+   - Each fix: add unit test to prevent regression
+
+2. Threshold & Drift Tuning
+   - Analyze simulator behavior on 5-10 minute runs
+   - Adjust drift_rate if too slow/fast (target: noticeable but realistic)
+   - Adjust debounce_sec if state flickers or lags (target: smooth transitions)
+   - Document final tuned values in README
+
+3. Persistence Timing Validation
+   - Run 5-minute simulation
+   - Verify persistence tasks scheduled every 5 sec
+   - Check no tasks missed, no duplicates
+   - Validate persistence records in scheduler output
+
+[AFTERNOON - 2-3 hours]
+
+4. Full End-to-End Test (with Nafis)
+   - Launch UI (Streamlit) on laptop A
+   - Run backend on laptop B (or same machine, separate terminal)
+   - Monitor:
+     * API latency (<2 sec per tick) ✓
+     * Chart updates smoothly without gaps ✓
+     * Alerts appear in log with correct timestamps ✓
+     * State transitions reflected immediately in KPI card ✓
+     * Fault injection button triggers rapid changes ✓
+     * Rolling history maintains 300-point cap ✓
+   - Run for 5+ minutes without restart
+   - Document any issues found
+
+5. Code Cleanup
+   - Remove debug print statements
+   - Add docstrings to all public methods
+   - Run tests one final time (all passing)
+   - Ensure imports are clean (no unused modules)
+
+6. Final README Update
+   - Add section: "Architecture Overview"
+     * Simulator → Agent → Scheduler → API
+     * Data flow diagram (ascii or link to docs)
+   - Add section: "Tuned Parameters" (final values)
+   - Add section: "Running Tests"
+     * Command to run unit tests
+     * Command to run integration tests
+     * Expected output snippets
+
+[END OF DAY 3]
+
+DELIVERABLE CHECKLIST:
+  ☐ All bugs from sync resolved + tested
+  ☐ Thresholds & drift tuned + documented
+  ☐ 5-minute test run completed (no crashes)
+  ☐ Persistence timing validated
+  ☐ Final README complete
+  ☐ Code cleanup done
+  ☐ All unit + integration tests passing
+  ☐ Ready for final demo with Nafis
+
+================================================================================
+TECHNICAL NOTES
+================================================================================
+
+DEPENDENCIES:
+  - Python 3.8+
+  - heapq (stdlib)
+  - json (stdlib)
+  - time (stdlib)
+  - Optional: pytest (for testing)
+
+FILE STRUCTURE (end of Day 3):
+  students/S12345_KhobaitSimran/
+    ├── main.py                      (SimulationController, entry point)
+    ├── simulator.py                 (TemperatureSimulator class)
+    ├── agent.py                     (YSMAI_Agent class)
+    ├── scheduler.py                 (Scheduler class)
+    ├── controller.py                (SimulationController class, if separate)
+    ├── test_integration.py           (integration tests)
+    ├── test_unit.py                 (unit tests for each module)
+    ├── API_CONTRACT.txt             (frozen JSON schema)
+    ├── API_EXAMPLES.txt             (usage examples)
+    ├── generate_samples.py          (sample data generator)
+    ├── samples/
+    │   ├── normal_run_100_ticks.json
+    │   ├── alert_scenario_100_ticks.json
+    │   └── fault_injection_50_ticks.json
+    ├── README.md                    (updated with tuning params + arch)
+    └── requirements.txt             (if using virtual env)
+
+ERROR HANDLING:
+  - Simulator: no errors (continuous state machine)
+  - Agent: log state transitions, handle edge cases (equal to threshold)
+  - Scheduler: gracefully handle empty queue, duplicate task_ids
+  - API: return error field if any exception occurs (don't crash)
+
+LOGGING:
+  - Minimal stdout (only key state transitions + warnings)
+  - Use print() for debug, can be toggled with DEBUG flag
+  - Sample output:
+    [Sim  0.5s] Temp=62.0°F, State=NORMAL
+    [Sim  3.0s] Temp=75.5°F, State=NORMAL, Drift applied
+    [Sim  4.0s] Temp=87.2°F, State→ALERT_HIGH, Alert: "High temperature"
+
+PERSISTENCE:
+  - For now: in-memory list of records (task payloads)
+  - Future: log to CSV or database
+  - Key fields: timestamp, temperature, state
+
+================================================================================
+CRITICAL SUCCESS CRITERIA
+================================================================================
+
+✓ API contract frozen by end of Day 2 AM (no breaking changes after)
+✓ All simulator/agent/scheduler tests passing by end of Day 1
+✓ Sample JSON valid, parseable, matches schema
+✓ 5-minute run without crashes (Day 3)
+✓ Latency <2 sec per tick (measure in Day 3 test)
+✓ Alerts trigger only on state change (not every tick)
+✓ Debounce prevents state flicker (<100ms hysteresis)
+✓ Persistence tasks auto-scheduled, no manual intervention
+
+================================================================================
+COMMUNICATION CHECKLIST
+================================================================================
+
+End of Day 1:
+  ☐ Send Nafis:
+     - API_CONTRACT.txt (JSON schema)
+     - sample_traces.json (3 examples)
+     - summary: "Core modules complete, API stable, ready for UI mock"
+
+Mid Day 2:
+  ☐ Send Nafis:
+     - controller.py (SimulationController)
+     - samples/ folder (JSON data)
+     - API_EXAMPLES.txt (usage code)
+     - note: "Stable API, you can integrate now"
+
+End of Day 2:
+  ☐ Joint 15-min sync:
+     - Demo: run 1-min sim, show JSON output
+     - Nafis demos UI with mock data
+     - List blockers, assign fixes
+     - Agree on any tuning params for Day 3
+
+End of Day 3:
+  ☐ Final demo run together
+     - Backend + UI live
+     - 5-min+ run, all features visible
+     - Celebration! 🎉
+
+================================================================================

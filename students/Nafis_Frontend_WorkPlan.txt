@@ -1,0 +1,872 @@
+================================================================================
+                    YSMAI PROJECT - PERSON B WORK PLAN
+                   NAFIS - FRONTEND & INTEGRATION OWNER
+================================================================================
+
+PROJECT OVERVIEW:
+  Real-time HVAC monitoring UI built with Streamlit. Consumes backend Python API;
+  displays temperature trends, alerts, system state, and scheduled tasks. Features
+  mock data fallback, fault injection button, rolling history, and Plotly charting.
+
+================================================================================
+DAY 1: STREAMLIT SKELETON + LAYOUT + MOCK DATA
+================================================================================
+
+DELIVERABLES:
+  ✓ Streamlit app with streamlit-autorefresh integration
+  ✓ Layout placeholders: KPI cards, chart area, alert log, scheduler table, sidebar
+  ✓ Mock data generator (matching API schema from Khubaib)
+  ✓ Sidebar buttons: Start, Stop, Reset, Fault Injection toggle
+  ✓ Static/interactive UI elements verified
+
+DETAILED TASKS:
+
+[MORNING - 3 hours]
+
+1. Project Setup
+   - File: app.py (main Streamlit app)
+   - Install dependencies:
+     * streamlit
+     * streamlit-autorefresh
+     * plotly
+     * pandas
+   - Create folder structure:
+     students/Nafis_Frontend/
+       ├── app.py
+       ├── requirements.txt
+       ├── mock_data.py
+       ├── components.py
+       └── config.py
+   - requirements.txt contents:
+     streamlit>=1.28.0
+     streamlit-autorefresh>=0.1.0
+     plotly>=5.17.0
+     pandas>=2.0.0
+
+2. App Configuration & Page Setup
+   - File: config.py
+   - Define constants:
+     * REFRESH_INTERVAL = 2  # seconds
+     * HISTORY_MAX_POINTS = 300
+     * THRESHOLD_HIGH = 85.0  # °F
+     * THRESHOLD_LOW = 50.0   # °F
+     * STATE_COLORS = {
+         "NORMAL": "green",
+         "ALERT_HIGH": "red",
+         "ALERT_LOW": "blue"
+       }
+   - Streamlit page config:
+     st.set_page_config(
+         page_title="YSMAI Monitor",
+         layout="wide",
+         initial_sidebar_state="expanded"
+     )
+   - Title: "YSMAI - HVAC Real-Time Monitor"
+
+3. Layout Structure
+   - File: app.py main layout
+   - Structure (using st.columns, st.container):
+     
+     [HEADER]
+     Title: "YSMAI - HVAC Real-Time Monitor"
+     Subtitle: "Temperature Simulation & Fault Detection"
+     
+     [MAIN CONTENT - 3 columns]
+     
+     Col 1 (1/4 width):
+       - KPI Card 1: Current Temp (°F), large font, color-coded
+       - KPI Card 2: Current State (NORMAL/ALERT_HIGH/ALERT_LOW)
+       - KPI Card 3: Time Elapsed (seconds)
+       - Status indicator: Connected/Disconnected
+     
+     Col 2-3 (3/4 width):
+       - Temperature Trend Chart (Plotly)
+         * X-axis: Time (seconds)
+         * Y-axis: Temperature (°F)
+         * Lines: actual temp, threshold_high (dashed red), threshold_low (dashed blue)
+         * Hover: show timestamp, temp, state
+       - Alert Log (below chart)
+         * Sortable table: timestamp, alert message, state_before → state_after
+     
+     [SIDEBAR]
+     - Section 1: Simulation Control
+       * Button: "Start Simulation"
+       * Button: "Stop Simulation"
+       * Button: "Reset All"
+     - Section 2: Simulation Settings
+       * Slider: Initial Temp (50–100°F, default 60)
+       * Slider: Warmup Duration (1–10 sec, default 5)
+       * Slider: Drift Rate (0.1–2.0 °F/sec, default 0.5)
+     - Section 3: Thresholds
+       * Slider: High Threshold (70–95°F, default 85)
+       * Slider: Low Threshold (40–60°F, default 50)
+       * Slider: Debounce (0.5–3.0 sec, default 1.5)
+     - Section 4: Fault Injection
+       * Toggle: "Enable Fault Injection"
+       * Slider: "Fault Magnitude" (when enabled, 1–20°F)
+     - Section 5: Scheduler Table
+       * Table: Scheduled Tasks
+         * Columns: task_id, due_time, payload preview
+         * Sortable by due_time
+
+4. Mock Data Generator
+   - File: mock_data.py
+   - Function: generate_mock_tick(tick_count, config_dict)
+     * Simulates one tick of mock data
+     * Returns dict matching API_CONTRACT.txt schema:
+       {
+         "timestamp": float (unix),
+         "temperature": float (°F),
+         "state": str (NORMAL|ALERT_HIGH|ALERT_LOW),
+         "state_changed": bool,
+         "alert_message": str or null,
+         "scheduled_tasks": [...],
+         "simulation_time": float
+       }
+     * Mock behavior:
+       - Temperature ramps up over 5 sec, then drifts
+       - State changes based on thresholds (deterministic for reproducibility)
+       - Alert messages generated on state change only
+   - Function: generate_mock_history(num_ticks)
+     * Returns list of num_ticks mock tick outputs
+     * Useful for testing UI with 100+ points of data
+   - Example usage:
+     ```python
+     from mock_data import generate_mock_tick
+     
+     tick = generate_mock_tick(tick_count=50, config={...})
+     print(tick)  # {..., "temperature": 75.2, "state": "NORMAL", ...}
+     ```
+
+5. Sidebar Layout & Controls
+   - File: components.py
+   - Function: render_sidebar() → dict (user inputs)
+     * Returns state of all sidebar controls
+     * Keys: "running", "reset_clicked", "fault_enabled", "fault_magnitude", etc.
+   - Streamlit logic:
+     if st.sidebar.button("Start Simulation"):
+         st.session_state.running = True
+     if st.sidebar.button("Stop Simulation"):
+         st.session_state.running = False
+     ...
+
+[AFTERNOON - 2-3 hours]
+
+6. Mock KPI Cards Component
+   - File: components.py
+   - Function: render_kpi_cards(current_temp, state, elapsed_time, connected)
+     * Displays 4 cards in a row
+     * Card 1: Temperature (large font, color by state)
+       Display: "75.2°F" (red if ALERT_HIGH, blue if ALERT_LOW, green if NORMAL)
+     * Card 2: System State (bold, colored)
+       Display: "NORMAL" / "⚠️ ALERT_HIGH" / "🔵 ALERT_LOW"
+     * Card 3: Time Elapsed
+       Display: "2:45" (minutes:seconds)
+     * Card 4: API Status
+       Display: "🟢 Connected" or "🔴 Disconnected (Mock)"
+   - Implementation: Use st.metric() or custom HTML/CSS
+
+7. Temperature Chart Component (Mock Data)
+   - File: components.py
+   - Function: render_chart(history_list, threshold_high, threshold_low)
+     * history_list: list of dicts with {"timestamp", "temperature", "state"}
+     * Creates Plotly figure:
+       - Scatter/Line plot
+       - X: time (seconds elapsed)
+       - Y: temperature (°F)
+       - Blue line: actual temperature
+       - Red dashed: threshold_high
+       - Blue dashed: threshold_low
+       - Highlight points where state != NORMAL (red/blue dots)
+     * Hover: show timestamp, temp, state
+     * Interactive: zoom, pan, hover details
+   - Example:
+     fig = go.Figure()
+     fig.add_trace(go.Scatter(x=times, y=temps, mode='lines', name='Temperature'))
+     fig.add_hline(y=threshold_high, line_dash="dash", line_color="red")
+     fig.add_hline(y=threshold_low, line_dash="dash", line_color="blue")
+     st.plotly_chart(fig, use_container_width=True)
+
+8. Alert Log Component (Mock Data)
+   - File: components.py
+   - Function: render_alert_log(alerts_list)
+     * alerts_list: list of {"timestamp", "alert_message", "state_from", "state_to"}
+     * Display as sortable/scrollable table
+     * Columns: Time, Alert Message, State Transition
+     * Example row:
+       | 12:34:56 | High temperature detected | NORMAL → ALERT_HIGH |
+   - Use st.dataframe() with sorting enabled
+   - Limit to 50 most recent alerts (scrollable)
+
+9. Static Testing
+   - File: test_ui_static.py or within app.py (if/main section)
+   - Load mock data generator
+   - Verify all layout elements render without errors
+   - Check:
+     * KPI cards display correct values ✓
+     * Chart renders with data ✓
+     * Alert log displays rows ✓
+     * Sidebar controls are interactive ✓
+     * Colors match state (green/red/blue) ✓
+
+[END OF DAY 1 - HANDOFF TO KHUBAIB]
+
+DELIVERABLE CHECKLIST:
+  ☐ app.py (main Streamlit app skeleton complete)
+  ☐ config.py (all constants defined)
+  ☐ mock_data.py (mock data generator, matches API schema)
+  ☐ components.py (all UI functions, tested static)
+  ☐ requirements.txt (all dependencies listed)
+  ☐ README (basic: "How to run: streamlit run app.py")
+  ☐ Message Khubaib: "UI skeleton ready, awaiting API_CONTRACT.txt + sample JSON"
+
+================================================================================
+DAY 2 AM: WAIT FOR KHUBAIB'S API, VALIDATE, FINALIZE MOCK
+================================================================================
+
+DELIVERABLES:
+  ✓ API_CONTRACT.txt received and reviewed
+  ✓ Mock data generator updated to match final schema
+  ✓ Unit tests for mock data generator
+  ✓ UI tested with mock data (100-tick run, no crashes)
+
+DETAILED TASKS:
+
+[MORNING - 2 hours]
+
+1. Review Khubaib's API Contract
+   - Receive: API_CONTRACT.txt, sample_traces.json
+   - Review JSON schema:
+     * Verify all expected fields present
+     * Check data types (float, str, bool, list)
+     * Note any fields added/removed vs. plan
+     * Verify thresholds, state names match config.py
+   - File: API_CONTRACT_REVIEW.txt (document any clarifications needed)
+
+2. Update Mock Data Generator
+   - File: mock_data.py
+   - Adjust mock_tick() to exactly match received API schema
+   - If sample_traces.json provided:
+     * Load one scenario (e.g., alert_scenario)
+     * Extract sequence of temps/states
+     * Implement as deterministic mock (same sequence each run)
+   - Unit test: verify mock tick output validates against JSON schema
+
+3. Test Mock Data with UI
+   - Command: streamlit run app.py --logger.level=debug
+   - Generate 100 mock ticks, feed into UI
+   - Run for 2-3 minutes (no manual intervention)
+   - Verify:
+     * Chart plots all 100 points correctly ✓
+     * Alert log shows state transitions ✓
+     * KPI cards update without flicker ✓
+     * No errors in Streamlit console ✓
+   - Screenshot: final UI state with mock data
+
+[END OF DAY 2 AM]
+
+DELIVERABLE CHECKLIST:
+  ☐ API_CONTRACT.txt reviewed
+  ☐ mock_data.py updated to match final schema
+  ☐ Unit tests for mock data passing
+  ☐ 100-tick mock run verified (no crashes)
+  ☐ Message Khubaib: "Ready for API integration, UI stable with mock data"
+
+================================================================================
+DAY 2 PM: INTEGRATE KHUBAIB'S API + ROLLING HISTORY + PLOTLY ENHANCEMENTS
+================================================================================
+
+DELIVERABLES:
+  ✓ Backend API imported and tested
+  ✓ Tick loop implemented (consumes API, feeds UI)
+  ✓ Rolling history management (cap 300 points)
+  ✓ Fault injection button wired to backend
+  ✓ Enhanced Plotly chart (thresholds, state colors, hover)
+  ✓ Alert log auto-populated from API output
+  ✓ End-of-day sync ready
+
+DETAILED TASKS:
+
+[AFTERNOON - 3-4 hours]
+
+1. Backend API Integration
+   - File: app.py (add imports)
+   - Import from Khubaib's module:
+     ```python
+     import sys
+     sys.path.insert(0, '../S12345_KhobaitSimran')
+     from controller import SimulationController
+     ```
+   - Initialize in app.py:
+     ```python
+     if 'controller' not in st.session_state:
+         st.session_state.controller = SimulationController(
+             initial_temp=st.session_state.initial_temp,
+             warmup_duration=st.session_state.warmup_duration,
+             drift_rate=st.session_state.drift_rate,
+             threshold_high=st.session_state.threshold_high,
+             threshold_low=st.session_state.threshold_low,
+             debounce_sec=st.session_state.debounce_sec
+         )
+     ```
+   - Error handling: try/except block
+     * If API import fails: fall back to mock data (gracefully)
+     * Log error to console: "API connection failed, using mock data"
+
+2. Tick Loop with Auto-Refresh
+   - File: app.py (main loop)
+   - Use streamlit-autorefresh:
+     ```python
+     from streamlit_autorefresh import rerun
+     auto_rerun = st_autorefresh(interval=2000)  # 2 sec
+     ```
+   - Main loop logic:
+     ```
+     if st.session_state.running:
+         if USE_API:
+             tick = st.session_state.controller.tick()
+         else:
+             tick = generate_mock_tick(...)
+         
+         st.session_state.history.append(tick)
+         
+         # Manage rolling history
+         if len(st.session_state.history) > 300:
+             st.session_state.history.pop(0)
+         
+         # Trigger alerts
+         if tick['state_changed']:
+             st.session_state.alerts.append({
+                 'timestamp': tick['timestamp'],
+                 'message': tick['alert_message'],
+                 'state_from': st.session_state.last_state,
+                 'state_to': tick['state']
+             })
+         
+         # Update KPI display
+         current_temp = tick['temperature']
+         current_state = tick['state']
+         
+         # Re-render
+         st.rerun()
+     ```
+
+3. Rolling History Management
+   - File: app.py (session state management)
+   - Initialize in session_state:
+     ```python
+     if 'history' not in st.session_state:
+         st.session_state.history = []
+     if 'alerts' not in st.session_state:
+         st.session_state.alerts = []
+     ```
+   - Maintain constraints:
+     * history: max 300 points (FIFO: remove oldest when exceeds)
+     * alerts: max 100 entries (FIFO: remove oldest when exceeds)
+   - Verify: after 5-min run, history stays at/below 300 points
+
+4. Fault Injection Wiring
+   - File: app.py
+   - Listen to sidebar toggle:
+     ```python
+     fault_enabled = st.sidebar.checkbox("Enable Fault Injection")
+     fault_magnitude = st.sidebar.slider("Fault Magnitude", 1, 20, 5)
+     
+     if fault_enabled != st.session_state.last_fault_state:
+         st.session_state.controller.set_fault_injection(
+             enabled=fault_enabled,
+             magnitude=fault_magnitude
+         )
+         st.session_state.last_fault_state = fault_enabled
+     ```
+   - Behavior: toggle button → immediate API call → next tick shows effect
+
+5. Enhanced Plotly Chart
+   - File: components.py
+   - Improve render_chart() function:
+     * Add threshold lines (dashed red/blue)
+     * Color points by state:
+       - Green: NORMAL
+       - Red: ALERT_HIGH
+       - Blue: ALERT_LOW
+     * Hover template:
+       ```
+       <b>Time: %{x}s</b><br>
+       Temperature: %{y}°F<br>
+       State: <extra></extra>
+       ```
+     * Layout:
+       - Title: "Temperature Trend"
+       - X-axis label: "Elapsed Time (seconds)"
+       - Y-axis label: "Temperature (°F)"
+       - Height: 400px
+       - Legend: show threshold lines only
+   - Example code:
+     ```python
+     import plotly.graph_objects as go
+     
+     fig = go.Figure()
+     
+     # Actual temp line
+     fig.add_trace(go.Scatter(
+         x=[h['simulation_time'] for h in history],
+         y=[h['temperature'] for h in history],
+         mode='lines+markers',
+         name='Temperature',
+         line=dict(color='blue', width=2)
+     ))
+     
+     # Threshold lines
+     fig.add_hline(y=threshold_high, line_dash="dash", line_color="red", name="High Threshold")
+     fig.add_hline(y=threshold_low, line_dash="dash", line_color="blue", name="Low Threshold")
+     
+     st.plotly_chart(fig, use_container_width=True)
+     ```
+
+6. Alert Log from API
+   - File: components.py
+   - Update render_alert_log():
+     * Pull alerts from st.session_state.alerts
+     * Display as DataFrame:
+       | Timestamp | Alert Message | State Transition |
+       |-----------|---------------|------------------|
+       | 12:34:56  | Temp too high | NORMAL → ALERT_HIGH |
+     * Sort by timestamp descending (newest first)
+     * Limit to 50 rows (scrollable)
+
+7. Fallback to Mock Data
+   - File: app.py
+   - Add constant: USE_API = True
+   - Wrap API calls in try/except:
+     ```python
+     try:
+         from controller import SimulationController
+         USE_API = True
+     except ImportError:
+         USE_API = False
+         st.warning("API not found; using mock data for demo")
+     ```
+   - Fallback: automatically switches to mock_data.generate_mock_tick()
+   - User won't notice switch (UI same either way)
+
+8. End-of-Day Verification
+   - Run app with API for 5 minutes
+   - Verify:
+     * Tick rate: ~1 tick per 2 sec (expect ~150 ticks in 5 min) ✓
+     * History capped at 300 points ✓
+     * Chart updates smoothly (no gaps, no duplicates) ✓
+     * Alerts logged correctly (only on state change) ✓
+     * Fault injection works (toggle → visible changes) ✓
+     * No crashes, no flicker ✓
+   - Screenshot: final state with API-driven data
+
+[END OF DAY 2]
+
+DELIVERABLE CHECKLIST:
+  ☐ API integrated (from controller.py)
+  ☐ Tick loop implemented with auto-refresh
+  ☐ Rolling history management (max 300 points)
+  ☐ Fault injection wired to backend
+  ☐ Plotly chart enhanced (thresholds, state colors, hover)
+  ☐ Alert log auto-populated from API
+  ☐ Mock fallback implemented
+  ☐ 5-minute test run completed (no crashes)
+  ☐ Screenshot saved: app_day2_final.png
+  ☐ Message Khubaib: "Integration complete, ready for sync"
+
+================================================================================
+DAY 2 PM: JOINT 15-MIN SYNC (with Khubaib)
+================================================================================
+
+MEETING AGENDA (15 minutes):
+  1. (3 min) Khubaib demos 1-min backend simulation (shows JSON tick output)
+  2. (3 min) Nafis demos UI with live API (shows chart, alerts, state transitions)
+  3. (5 min) Testing results: checklist items verified
+  4. (4 min) Blockers + next steps for Day 3
+     - Any crashes, lags, or contract violations?
+     - Any UI tweaks needed?
+     - Agree on tuning params (drift, thresholds, debounce)
+
+SYNC CHECKLIST (before meeting):
+  Khubaib:
+    ☐ Core modules tested, API stable
+    ☐ 1-min demo ready (can show JSON on screen)
+    ☐ Latency measured (<2 sec per tick expected)
+
+  Nafis:
+    ☐ UI rendering + API integrated, no crashes
+    ☐ 5-min test run completed
+    ☐ Screenshot of final state ready
+    ☐ List of any API issues encountered
+
+================================================================================
+DAY 3: PERFORMANCE PASS, DEBOUNCE CHECK, RESET BUTTON, FINALIZATION
+================================================================================
+
+DELIVERABLES:
+  ✓ UI latency <2 sec per tick (measure + optimize)
+  ✓ Debounce flicker check (state transitions smooth)
+  ✓ Reset button fully functional
+  ✓ Performance verified: 5+ min run, no crashes
+  ✓ README complete with demo script
+  ✓ Final demo with Khubaib
+
+DETAILED TASKS:
+
+[MORNING - 2 hours]
+
+1. Performance Profiling
+   - Measure tick latency:
+     * Add timing code to app.py:
+       ```python
+       start = time.time()
+       tick = st.session_state.controller.tick()
+       latency = time.time() - start
+       st.session_state.latencies.append(latency)
+       ```
+     * Run for 5 minutes
+     * Calculate: mean latency, max latency, 95th percentile
+     * Log results: performance_report.txt
+     * Target: mean <1 sec, max <2 sec
+   - If latency too high:
+     * Reduce chart point size (performance vs. clarity trade-off)
+     * Batch Streamlit updates (use container, fewer reruns)
+     * Profile with streamlit --logger.level=debug
+
+2. Debounce Flicker Check
+   - Run UI for 5+ minutes
+   - Watch state card closely (should not flicker)
+   - Check alert log:
+     * Each state transition should appear only once
+     * No duplicate alerts for same transition
+   - If flicker detected:
+     * Verify agent.update() debounce logic is working
+     * Increase debounce_sec if threshold too sensitive
+     * Review Khubaib's agent implementation
+
+3. Reset Button Implementation
+   - File: app.py (sidebar controls)
+   - Add button:
+     ```python
+     if st.sidebar.button("🔄 Reset All"):
+         st.session_state.controller.reset_simulation()
+         st.session_state.history = []
+         st.session_state.alerts = []
+         st.session_state.running = False
+         st.rerun()
+     ```
+   - Behavior:
+     * Clears all history and alerts
+     * Stops simulation
+     * Resets controller to initial state
+     * UI refreshes to show empty chart, no alerts
+   - Test: click reset → verify chart empty, history length 0
+
+[AFTERNOON - 2-3 hours]
+
+4. Complete README
+   - File: README.md (in Nafis_Frontend folder)
+   - Sections:
+     1. **Project Overview**
+        - YSMAI HVAC Monitor, Streamlit UI, real-time dashboard
+     2. **Features**
+        - Live temperature chart with thresholds
+        - System state KPIs (NORMAL, ALERT_HIGH, ALERT_LOW)
+        - Alert log (state transitions)
+        - Scheduler task table
+        - Fault injection for testing
+        - Rolling history (300-point cap)
+     3. **Installation**
+        ```
+        pip install -r requirements.txt
+        ```
+     4. **Running the App**
+        ```
+        streamlit run app.py
+        ```
+     5. **Configuration**
+        - Sidebar settings: thresholds, warmup, drift, debounce
+        - Default values: initial_temp=60, threshold_high=85, threshold_low=50
+     6. **API Integration**
+        - Backend API imported from ../S12345_KhobaitSimran/controller.py
+        - Falls back to mock data if API unavailable
+     7. **Demo Script**
+        (see below)
+
+5. Demo Script
+   - File: demo_script.sh or demo_steps.txt
+   - Step-by-step guide to run complete demo:
+     ```
+     # 1. Start Streamlit app
+     streamlit run app.py
+     
+     # 2. Sidebar: Set thresholds
+     High Threshold: 85°F (default)
+     Low Threshold: 50°F (default)
+     
+     # 3. Click "Start Simulation"
+     
+     # 4. Watch for 1 minute
+     - Chart should show rising temperature
+     - State should remain NORMAL (if temp < 85)
+     
+     # 5. Enable Fault Injection
+     - Toggle "Enable Fault Injection"
+     - Set magnitude to 15°F
+     
+     # 6. Watch for 1 minute
+     - Temperature should oscillate wildly
+     - Alerts should trigger when temp crosses thresholds
+     - Alert log should show state transitions
+     
+     # 7. Click "Reset All"
+     - Chart should clear
+     - Alert log should clear
+     - State should reset to NORMAL
+     
+     # 8. Run for 5 minutes
+     - Monitor latency in console
+     - Verify no crashes
+     - Verify chart stays under 300 points
+     
+     # Success: All features visible, smooth operation
+     ```
+
+6. Final UI Polish
+   - File: components.py, app.py
+   - Check:
+     * Colors consistent (green=NORMAL, red=ALERT_HIGH, blue=ALERT_LOW)
+     * Fonts readable (no tiny text, no huge headers)
+     * Layout balanced (no elements cut off on small screens)
+     * Button labels clear ("🔄 Reset All", "▶️ Start", "⏸️ Stop")
+     * Hover tooltips helpful
+   - Example: KPI card styling
+     ```python
+     st.metric(
+         label="Temperature",
+         value=f"{current_temp:.1f}°F",
+         help="Current HVAC outlet temperature"
+     )
+     ```
+
+7. Code Cleanup
+   - Remove debug print statements
+   - Remove unused imports
+   - Add docstrings to all functions
+   - Ensure consistent indentation
+   - Check for any TODOs or FIXMEs
+
+8. Prepare for Final Demo
+   - Clear all session state: streamlit cache clear
+   - Load fresh mock data
+   - Prepare talking points:
+     * "This is a real-time HVAC monitoring dashboard"
+     * "The backend simulates temperature with realistic warmup & drift"
+     * "We detect state changes and alert on threshold violations"
+     * "The UI updates every 2 seconds; rolling history prevents memory bloat"
+     * "Fault injection lets us test alert thresholds"
+
+[END OF DAY 3]
+
+DELIVERABLE CHECKLIST:
+  ☐ Latency measured + logged (performance_report.txt)
+  ☐ No flicker on state transitions (verified in 5-min run)
+  ☐ Reset button functional (history & alerts clear)
+  ☐ 5+ min test completed (no crashes)
+  ☐ README.md complete (all sections, demo script)
+  ☐ Code cleanup done
+  ☐ Demo script ready + tested once
+  ☐ Final screenshot saved (app_day3_final.png)
+  ☐ Ready for final demo with Khubaib
+
+================================================================================
+DAY 3: FINAL DEMO WITH KHUBAIB
+================================================================================
+
+DEMO PLAN (30 minutes together):
+
+[PART 1: Setup (5 min)]
+  - Start backend: python main.py (or app.py if it runs both)
+  - Start UI: streamlit run app.py
+  - Verify both running, no errors
+  - Show architecture diagram (backend → API → UI)
+
+[PART 2: Demo Walkthrough (20 min)]
+  - (2 min) Show UI layout
+    * KPI cards: temperature, state, elapsed time
+    * Temperature chart with thresholds (red/blue dashed lines)
+    * Alert log below chart
+    * Scheduler table in sidebar
+  - (3 min) Normal operation
+    * Click "Start Simulation"
+    * Watch for 1 minute (no faults)
+    * Temperature rises, then drifts
+    * State stays NORMAL (green)
+    * No alerts
+  - (3 min) Enable fault injection
+    * Toggle "Enable Fault Injection"
+    * Set magnitude to 15°F
+    * Watch for 1 minute
+    * Temperature oscillates
+    * Alerts trigger when thresholds crossed
+    * Alert log shows transitions
+    * State card flickers (shows ALERT_HIGH/LOW when appropriate)
+  - (2 min) Reset & verify
+    * Click "Reset All"
+    * Chart clears
+    * Alerts clear
+    * State → NORMAL
+  - (3 min) Long-run verification
+    * Start simulation again
+    * Run for 5 minutes in background
+    * Monitor:
+      - Chart doesn't crash or lag
+      - History stays under 300 points
+      - No duplicate alerts
+      - No errors in console
+  - (2 min) Q&A + discussion
+    * What went well?
+    * What could be improved?
+    * Timeline: ~6 hours of work (3 days + buffer)
+
+[PART 3: Wrap-up (5 min)]
+  - Celebrate! 🎉
+  - Discuss future enhancements:
+    * Persistence to database
+    * User authentication
+    * Multiple sensor monitoring
+    * Mobile app
+  - Final notes: both modules now stable & production-ready
+
+DEMO CHECKLIST (before starting):
+  Khubaib:
+    ☐ Backend running, no errors
+    ☐ API responds in <2 sec
+    ☐ Can show JSON tick output on screen
+  
+  Nafis:
+    ☐ Streamlit app running, no errors
+    ☐ Mock data fallback ready (in case API drops)
+    ☐ UI responsive, chart renders
+  
+  Both:
+    ☐ Demo script reviewed
+    ☐ Test run completed (no unexpected issues)
+    ☐ Laptops charged, internet stable
+    ☐ Screen share set up (if remote)
+
+================================================================================
+TECHNICAL NOTES
+================================================================================
+
+DEPENDENCIES:
+  - streamlit>=1.28.0
+  - streamlit-autorefresh>=0.1.0
+  - plotly>=5.17.0
+  - pandas>=2.0.0
+  - Python 3.8+
+
+FILE STRUCTURE (end of Day 3):
+  students/Nafis_Frontend/
+    ├── app.py                      (main Streamlit app)
+    ├── config.py                   (constants, thresholds)
+    ├── mock_data.py                (mock data generator)
+    ├── components.py               (UI components)
+    ├── requirements.txt            (dependencies)
+    ├── README.md                   (docs + demo script)
+    ├── demo_steps.txt              (step-by-step guide)
+    ├── performance_report.txt      (latency metrics)
+    └── screenshots/
+        ├── app_day1_skeleton.png
+        ├── app_day2_integrated.png
+        └── app_day3_final.png
+
+API INTEGRATION:
+  - Import: from controller import SimulationController
+  - Path: sys.path.insert(0, '../S12345_KhobaitSimran')
+  - Error handling: try/except → fallback to mock
+  - Expected latency: <1 sec mean, <2 sec max
+
+STREAMLIT SESSION STATE MANAGEMENT:
+  - st.session_state.running (bool)
+  - st.session_state.history (list of dicts)
+  - st.session_state.alerts (list of dicts)
+  - st.session_state.controller (SimulationController instance)
+  - st.session_state.last_state (current state string)
+
+CHART PERFORMANCE:
+  - Plotly + Streamlit auto-updates on data change
+  - Rolling history cap (300 points) prevents UI lag
+  - Hover info: show timestamp, temp, state
+  - Colors: green (NORMAL), red (ALERT_HIGH), blue (ALERT_LOW)
+
+STYLING:
+  - Use st.markdown() with custom CSS for colors
+  - Example:
+    ```python
+    if current_state == "ALERT_HIGH":
+        st.markdown(f"<h1 style='color: red;'>{current_state}</h1>", unsafe_allow_html=True)
+    ```
+
+ERROR HANDLING:
+  - API unavailable: gracefully fallback to mock data
+  - Malformed JSON from backend: log error, skip tick
+  - Streamlit crashes: auto-reload (user sees message)
+
+LOGGING:
+  - Minimal output to keep console clean
+  - log.txt (optional): record latencies, errors, alerts
+  - Debug mode: streamlit run app.py --logger.level=debug
+
+================================================================================
+CRITICAL SUCCESS CRITERIA
+================================================================================
+
+✓ UI renders without errors (Day 1)
+✓ API integration stable (Day 2 PM)
+✓ 5-minute test run with no crashes (Day 3)
+✓ Chart updates smoothly (no flicker, no gaps)
+✓ Alerts triggered only on state change (no duplicates)
+✓ Rolling history stays under 300 points
+✓ Fault injection works (toggle → visible changes)
+✓ Reset button clears all state
+✓ Latency <2 sec per tick
+✓ Debounce prevents state flicker (<100ms hysteresis)
+✓ Mock fallback works if API unavailable
+
+================================================================================
+COMMUNICATION CHECKLIST
+================================================================================
+
+End of Day 1:
+  ☐ Send Khubaib:
+     - Screenshot of UI skeleton
+     - Message: "Layout complete, awaiting API_CONTRACT.txt + sample JSON"
+
+Mid Day 2:
+  ☐ Receive from Khubaib:
+     - API_CONTRACT.txt
+     - sample_traces.json
+     - API_EXAMPLES.txt
+  ☐ Review + validate
+  ☐ Update mock data generator
+
+End of Day 2 AM:
+  ☐ Message Khubaib:
+     - "UI skeleton validated with mock data, ready for API integration"
+
+End of Day 2 PM:
+  ☐ Joint 15-min sync:
+     - Khubaib demos backend
+     - Nafis demos UI with API
+     - Verify checklist items
+     - List blockers for Day 3
+
+End of Day 3:
+  ☐ Final demo run together
+     - 5-min+ live simulation
+     - All features visible
+     - No crashes
+     - Celebration! 🎉
+
+================================================================================
