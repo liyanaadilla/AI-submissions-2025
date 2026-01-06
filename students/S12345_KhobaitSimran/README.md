@@ -1,63 +1,137 @@
-# Iris Flower Classification
+AI-submissions-2025
+This repository is owned and maintained by the lecturer. All student submissions must be made via Pull Request (PR) to ensure permanent record keeping, automated testing, and fair evaluation.
 
-## Project Description
+⚠️ Do NOT create your own repository for submission. ⚠️ Do NOT email or zip your code.
 
-This project implements a machine learning model to classify iris flowers into three species:
-- **Setosa**
-- **Versicolor**
-- **Virginica**
+Submission Method (Mandatory)
+All students must submit their work by:
 
-The classification is based on four measurements:
-- Sepal length
-- Sepal width
-- Petal length
-- Petal width
+Forking this repository → adding your code → creating a Pull Request
 
-The project uses the K-Nearest Neighbors (KNN) algorithm from scikit-learn to perform the classification.
+Submissions outside this method will not be evaluated.
 
-## How to Run
+Folder Structure (IMPORTANT)
+Each student must create one folder only inside the students/ directory.
 
-1. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
+📂 Folder naming format : students/_/
 
-2. Run the main program:
-```bash
+Required Files (COMPULSORY)
+
+Inside your folder, the following files are mandatory:
+
+main.py requirements.txt README.md
+
+1️⃣ main.py
+
+The main entry point of your AI program.
+
+The lecturer must be able to run your code using:
+
 python main.py
-```
 
-## Expected Output
+2️⃣ requirements.txt
 
-The program will:
-1. Load the Iris dataset (150 samples)
-2. Split data into training (80%) and testing (20%) sets
-3. Train a KNN classifier
-4. Display model accuracy and classification report
-5. Make predictions on sample flower measurements
+List only the Python libraries required to run your project.
 
-**Sample output:**
-```
-==================================================
-IRIS FLOWER CLASSIFICATION
-AI Project - Machine Learning Demo
-==================================================
-Loading Iris dataset...
-Dataset loaded successfully!
-Number of samples: 150
-Number of features: 4
+Example:
 
-Accuracy: 100.00%
+numpy pandas scikit-learn matplotlib
 
-Classification Report:
-              precision    recall  f1-score   support
+⚠️ Do not include unnecessary or unused libraries.
 
-      setosa       1.00      1.00      1.00        10
-  versicolor       1.00      1.00      1.00        10
-   virginica       1.00      1.00      1.00        10
-```
+3️⃣ README.md
 
-## Author
+Your README must include:
 
-- **Student ID:** S12345
-- **Name:** Khobait Simran
+Project title
+
+Brief project description
+
+How to run the code
+
+Expected output
+
+📌 Example:
+AI Image Classification
+This project classifies images using a CNN model.
+
+How to Run
+pip install -r requirements.txt python main.py
+
+Output
+Accuracy will be printed in the terminal.
+
+🔹 How to Submit (Step-by-Step)
+Step 1: Fork the Repository
+
+Click Fork (top-right of this page) to create your own copy.
+
+Step 2: Add Your Folder
+
+In your forked repo:
+
+Go to students/
+
+Create your folder using the required format
+
+Add main.py, requirements.txt, and README.md
+
+Step 3: Commit Your Changes
+
+Commit your work with a clear message:
+
+Add AI project submission - S12345_AliAhmad
+
+Step 4: Open a Pull Request
+
+Click Contribute → Open Pull Request
+
+Ensure:
+
+Base repository: Lecturer’s repo
+
+Base branch: main
+
+Submit your Pull Request
+
+🔹 Automated Code Checking (GitHub Actions)
+
+Once you submit a Pull Request:
+
+Your code will be automatically executed
+
+Results will appear under the Actions / Checks tab
+
+Status meaning:
+
+✅ Green: Code runs successfully
+
+❌ Red: Error detected (check logs)
+
+⚠️ Submissions with failing checks may receive reduced marks or zero marks, depending on assessment criteria.
+
+🔹 Important Rules & Restrictions
+
+❌ Do NOT modify or delete:
+
+Other students’ folders
+
+GitHub workflow files
+
+Root-level files
+
+❌ Do NOT include:
+
+Large datasets
+
+Pre-trained model files
+
+External configuration dependencies
+
+✅ Use small sample data or dummy inputs for demonstration.
+
+🔹 Late or Invalid Submissions
+
+Pull Requests submitted after the deadline may be penalised.
+
+Submissions without a successful GitHub Actions run may be considered not runnable.

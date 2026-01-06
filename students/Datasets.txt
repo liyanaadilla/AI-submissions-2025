@@ -1,0 +1,83 @@
+# The "DNA" of AI Model
+data_schema = {
+    "timestamp": "datetime",  # For time-series plotting
+    "rpm": "int",            # Range: 0-3000
+    "temp_c": "float",       # Range: 25.0-115.0
+    "oil_pressure_psi": "float", # Range: 0.0-80.0
+    "vibration_mms": "float",    # Range: 0.0-50.0
+    "voltage_v": "float"     # Range: 10.0-15.0
+}
+
+
+1. For the "General Brain" (Logic Core)
+Dataset: Kaggle: Engine Fault Detection Data
+
+Required Columns: Engine Speed, Lubrication oil pressure, Coolant temperature, Engine Vibration.
+
+Usage: Train a Random Forest Classifier.
+
+Input: [RPM, Pressure, Temp, Vib]
+
+Output: [0=Normal, 1=Fault]
+
+Goal: This teaches your agent the "General Rules" of engines (e.g., "High Temp usually means Fault").
+
+2. For the "Vibration/Structural" Module
+Dataset: Kaggle: NASA Bearing Dataset
+
+Required Columns: Bearing 1, Bearing 2 (Accelerometer data).
+
+Usage: Train an Anomaly Detector (Isolation Forest).
+
+Goal: To learn what "Good" vibration looks like vs. "Bad" vibration (inner race faults). You will map the output of this model to your simulated Vib variable.
+
+3. For the "Hydraulic/Oil" Module
+Dataset: Kaggle: Hydraulic Systems Condition Monitoring
+
+Required Columns: PS1 (System Pressure), FS1 (Volume Flow).
+
+Usage: Train a Regression Model.
+
+Goal: To predict what the oil pressure should be at a given RPM. If the actual simulated pressure is lower than this prediction, your AI raises a "Leak Suspected" alert.
+
+
+
+# Install dependencies as needed:
+# pip install kagglehub[pandas-datasets]
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
+
+# Set the path to the file you'd like to load
+file_path = ""
+
+# Load the latest version
+df = kagglehub.load_dataset(
+  KaggleDatasetAdapter.PANDAS,
+  "ziya07/engine-fault-detection-data",
+  file_path,
+  # Provide any additional arguments like 
+  # sql_query or pandas_kwargs. See the 
+  # documenation for more information:
+  # https://github.com/Kaggle/kagglehub/blob/main/README.md#kaggledatasetadapterpandas
+)
+
+print("First 5 records:", df.head())
+
+
+
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("jjacostupa/condition-monitoring-of-hydraulic-systems")
+
+print("Path to dataset files:", path)
+
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("vinayak123tyagi/bearing-dataset")
+
+print("Path to dataset files:", path)
+
