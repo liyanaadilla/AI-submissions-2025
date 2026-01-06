@@ -1,0 +1,393 @@
+
+[
+  {
+    "scenario": "SCENARIO 1: NORMAL OPERATION (No faults, stable temperatures)",
+    "description": "System warms up normally, then drifts slightly. No alerts triggered.",
+    "duration_seconds": 15,
+    "ticks": 30,
+    "tick_interval": 0.5,
+    "parameters": {
+      "initial_temp": 60.0,
+      "warmup_duration_sec": 5.0,
+      "drift_rate": 0.5,
+      "threshold_high": 85.0,
+      "threshold_low": 50.0,
+      "debounce_sec": 1.5,
+      "fault_injection": false
+    },
+    "trace": [
+      {
+        "tick": 0,
+        "timestamp": 1000.0,
+        "simulation_time": 0.0,
+        "temperature": 60.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 1,
+        "timestamp": 1000.5,
+        "simulation_time": 0.5,
+        "temperature": 61.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 5,
+        "timestamp": 1002.5,
+        "simulation_time": 2.5,
+        "temperature": 65.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 10,
+        "timestamp": 1005.0,
+        "simulation_time": 5.0,
+        "temperature": 70.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": [
+          {
+            "task_id": "persist_0",
+            "payload": {
+              "type": "persistence",
+              "timestamp": 1005.0,
+              "temperature": 70.0,
+              "state": "NORMAL"
+            },
+            "due_time": 1005.0
+          }
+        ]
+      },
+      {
+        "tick": 15,
+        "timestamp": 1007.5,
+        "simulation_time": 7.5,
+        "temperature": 72.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 20,
+        "timestamp": 1010.0,
+        "simulation_time": 10.0,
+        "temperature": 72.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": [
+          {
+            "task_id": "persist_1",
+            "payload": {
+              "type": "persistence",
+              "timestamp": 1010.0,
+              "temperature": 72.5,
+              "state": "NORMAL"
+            },
+            "due_time": 1010.0
+          }
+        ]
+      },
+      {
+        "tick": 29,
+        "timestamp": 1014.5,
+        "simulation_time": 14.5,
+        "temperature": 71.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      }
+    ]
+  },
+
+  {
+    "scenario": "SCENARIO 2: HIGH-TEMPERATURE ALERT WITH RECOVERY",
+    "description": "Temperature rises above 85°F threshold, triggers ALERT_HIGH, then recovers back to NORMAL.",
+    "duration_seconds": 20,
+    "ticks": 40,
+    "tick_interval": 0.5,
+    "parameters": {
+      "initial_temp": 75.0,
+      "warmup_duration_sec": 2.0,
+      "drift_rate": 1.5,
+      "threshold_high": 85.0,
+      "threshold_low": 50.0,
+      "debounce_sec": 1.5,
+      "fault_injection": false
+    },
+    "trace": [
+      {
+        "tick": 0,
+        "timestamp": 2000.0,
+        "simulation_time": 0.0,
+        "temperature": 75.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 5,
+        "timestamp": 2002.5,
+        "simulation_time": 2.5,
+        "temperature": 82.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 10,
+        "timestamp": 2005.0,
+        "simulation_time": 5.0,
+        "temperature": 87.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": [
+          {
+            "task_id": "persist_0",
+            "payload": {
+              "type": "persistence",
+              "timestamp": 2005.0,
+              "temperature": 87.5,
+              "state": "NORMAL"
+            },
+            "due_time": 2005.0
+          }
+        ]
+      },
+      {
+        "comment": "Temperature above threshold but debounce not yet expired",
+        "tick": 11,
+        "timestamp": 2005.5,
+        "simulation_time": 5.5,
+        "temperature": 89.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "At tick 13 (6.5 sec), debounce expires - state transitions to ALERT_HIGH",
+        "tick": 13,
+        "timestamp": 2006.5,
+        "simulation_time": 6.5,
+        "temperature": 91.5,
+        "state": "ALERT_HIGH",
+        "state_changed": true,
+        "alert_message": "High temperature alert: 85°F threshold exceeded",
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 20,
+        "timestamp": 2010.0,
+        "simulation_time": 10.0,
+        "temperature": 93.0,
+        "state": "ALERT_HIGH",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": [
+          {
+            "task_id": "persist_1",
+            "payload": {
+              "type": "persistence",
+              "timestamp": 2010.0,
+              "temperature": 93.0,
+              "state": "ALERT_HIGH"
+            },
+            "due_time": 2010.0
+          }
+        ]
+      },
+      {
+        "comment": "Temperature drops back below threshold but in ALERT state",
+        "tick": 25,
+        "timestamp": 2012.5,
+        "simulation_time": 12.5,
+        "temperature": 82.0,
+        "state": "ALERT_HIGH",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "After debounce expires in safe zone, transitions back to NORMAL",
+        "tick": 29,
+        "timestamp": 2014.5,
+        "simulation_time": 14.5,
+        "temperature": 75.0,
+        "state": "NORMAL",
+        "state_changed": true,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 35,
+        "timestamp": 2017.5,
+        "simulation_time": 17.5,
+        "temperature": 72.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      }
+    ]
+  },
+
+  {
+    "scenario": "SCENARIO 3: FAULT INJECTION - RAPID OSCILLATION",
+    "description": "Fault injection enabled with high magnitude, causing rapid temperature fluctuations.",
+    "duration_seconds": 10,
+    "ticks": 20,
+    "tick_interval": 0.5,
+    "parameters": {
+      "initial_temp": 70.0,
+      "warmup_duration_sec": 1.0,
+      "drift_rate": 0.5,
+      "threshold_high": 85.0,
+      "threshold_low": 55.0,
+      "debounce_sec": 1.5,
+      "fault_injection": true,
+      "fault_magnitude": 15.0
+    },
+    "trace": [
+      {
+        "tick": 0,
+        "timestamp": 3000.0,
+        "simulation_time": 0.0,
+        "temperature": 70.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "Warmup phase, fault injection adds random spikes",
+        "tick": 2,
+        "timestamp": 3001.0,
+        "simulation_time": 1.0,
+        "temperature": 73.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "Post-warmup, combined drift + high fault oscillation",
+        "tick": 3,
+        "timestamp": 3001.5,
+        "simulation_time": 1.5,
+        "temperature": 82.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 4,
+        "timestamp": 3002.0,
+        "simulation_time": 2.0,
+        "temperature": 65.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 5,
+        "timestamp": 3002.5,
+        "simulation_time": 2.5,
+        "temperature": 88.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "Multiple ticks near/above threshold",
+        "tick": 6,
+        "timestamp": 3003.0,
+        "simulation_time": 3.0,
+        "temperature": 86.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 7,
+        "timestamp": 3003.5,
+        "simulation_time": 3.5,
+        "temperature": 72.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "comment": "Debounce prevents rapid cycling despite volatile readings",
+        "tick": 8,
+        "timestamp": 3004.0,
+        "simulation_time": 4.0,
+        "temperature": 90.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": [
+          {
+            "task_id": "persist_0",
+            "payload": {
+              "type": "persistence",
+              "timestamp": 3004.0,
+              "temperature": 90.5,
+              "state": "NORMAL"
+            },
+            "due_time": 3004.0
+          }
+        ]
+      },
+      {
+        "tick": 10,
+        "timestamp": 3005.0,
+        "simulation_time": 5.0,
+        "temperature": 79.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 15,
+        "timestamp": 3007.5,
+        "simulation_time": 7.5,
+        "temperature": 87.0,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      },
+      {
+        "tick": 19,
+        "timestamp": 3009.5,
+        "simulation_time": 9.5,
+        "temperature": 68.5,
+        "state": "NORMAL",
+        "state_changed": false,
+        "alert_message": null,
+        "scheduled_tasks": []
+      }
+    ]
+  }
+]

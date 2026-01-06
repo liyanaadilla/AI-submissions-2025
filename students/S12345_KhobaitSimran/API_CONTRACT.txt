@@ -1,0 +1,307 @@
+================================================================================
+                         HVAC MONITORING SYSTEM
+                         API CONTRACT SPECIFICATION
+================================================================================
+
+VERSION: 1.0
+FROZEN: Day 1 (No breaking changes after this point)
+
+================================================================================
+TICK() RESPONSE SCHEMA
+================================================================================
+
+The core API method tick() returns a JSON-serializable dictionary with the
+following structure:
+
+{
+  "timestamp": float (unix timestamp, seconds since epoch),
+  "temperature": float (current temperature in °F, range 50-120),
+  "state": string (one of: "NORMAL", "ALERT_HIGH", "ALERT_LOW"),
+  "state_changed": bool (true if state transitioned this tick),
+  "alert_message": string or null (alert text, only non-null on state change),
+  "scheduled_tasks": [
+    {
+      "task_id": string (unique task identifier),
+      "payload": object (task-specific data),
+      "due_time": float (unix timestamp when task was due)
+    },
+    ...
+  ],
+  "simulation_time": float (elapsed seconds since simulation start),
+  "debug_info": {
+    "simulator_state": object,
+    "agent_state": object,
+    "scheduler_state": object
+  }
+}
+
+================================================================================
+FIELD DEFINITIONS
+================================================================================
+
+timestamp
+  Type: float (unix timestamp)
+  Description: Current simulation time as unix timestamp (seconds since epoch)
+  Example: 1000.0
+
+temperature
+  Type: float
+  Description: Current temperature reading in degrees Fahrenheit
+  Valid range: 50°F to 120°F
+  Example: 72.5
+
+state
+  Type: string
+  Valid values: "NORMAL", "ALERT_HIGH", "ALERT_LOW"
+  Description:
+    NORMAL:    Temperature within safe thresholds
+    ALERT_HIGH: Temperature exceeded high threshold
+    ALERT_LOW:  Temperature fell below low threshold
+  Example: "NORMAL"
+
+state_changed
+  Type: boolean
+  Description: True if agent transitioned to a new state in this tick
+  Example: false
+
+alert_message
+  Type: string or null
+  Description: Human-readable alert message. Only non-null when state_changed=true
+  Example: "High temperature alert: 85°F threshold exceeded"
+  When null: State did not change this tick
+
+scheduled_tasks
+  Type: array of objects
+  Description: Tasks that came due during this tick
+  Each task has:
+    - task_id (string): unique identifier
+    - payload (object): task-specific data
+    - due_time (float): when task was scheduled to run
+  Example:
+    [
+      {
+        "task_id": "persist_1",
+        "payload": {"type": "persistence", "temp": 72.5, "state": "NORMAL"},
+        "due_time": 1005.0
+      }
+    ]
+
+simulation_time
+  Type: float (seconds)
+  Description: Elapsed simulation time since start
+  Example: 5.5
+
+debug_info
+  Type: object (optional, for debugging)
+  Description: Internal state snapshots for diagnostics
+  Contains: simulator_state, agent_state, scheduler_state dicts
+
+================================================================================
+DEFAULT THRESHOLDS & PARAMETERS
+================================================================================
+
+threshold_high: 85°F
+  - Temperature at which ALERT_HIGH is triggered
+  - Configurable at controller initialization
+
+threshold_low: 50°F
+  - Temperature at which ALERT_LOW is triggered
+  - Configurable at controller initialization
+
+debounce_sec: 1.5 seconds
+  - Minimum duration a condition must persist to trigger state change
+  - Prevents rapid state flickering on noisy readings
+  - Configurable at controller initialization
+
+drift_rate: 0.5°F per second (in drift phase)
+  - Temperature change rate after warmup completes
+  - Simulates aging/degradation in HVAC system
+  - Configurable at controller initialization
+
+update_interval_sec: 0.5 seconds
+  - Time step between tick() calls
+  - Configurable, but constant during simulation run
+  - Default: 0.5
+
+warmup_duration_sec: 5.0 seconds
+  - Duration of initial warmup ramp
+  - Configurable at controller initialization
+  - After this, drift phase begins
+
+initial_temperature: 60.0°F
+  - Starting temperature
+  - Configurable at controller initialization
+
+================================================================================
+ALERT MESSAGE FORMATS
+================================================================================
+
+ALERT_HIGH state transition:
+  "High temperature alert: {threshold_high}°F threshold exceeded"
+  Example: "High temperature alert: 85°F threshold exceeded"
+
+ALERT_LOW state transition:
+  "Low temperature alert: below {threshold_low}°F threshold"
+  Example: "Low temperature alert: below 50°F threshold"
+
+Recovery to NORMAL:
+  Alert message is null (no explicit recovery message)
+
+================================================================================
+SCHEDULER TASK PAYLOAD STRUCTURE (PERSISTENCE)
+================================================================================
+
+Automatic persistence tasks are scheduled every 5 seconds by the controller.
+Payload format:
+
+{
+  "type": "persistence",
+  "timestamp": float (unix timestamp),
+  "temperature": float (temperature value in °F),
+  "state": string (NORMAL|ALERT_HIGH|ALERT_LOW),
+  "task_id": string (auto-generated or provided)
+}
+
+Example:
+{
+  "type": "persistence",
+  "timestamp": 1005.0,
+  "temperature": 72.5,
+  "state": "NORMAL",
+  "task_id": "persist_1"
+}
+
+================================================================================
+FAULT INJECTION MODE
+================================================================================
+
+When fault injection is enabled via set_fault_injection(enabled, magnitude):
+
+- Random temperature spikes/dips are injected each tick
+- Magnitude parameter controls max deviation (in °F)
+- Temperature remains clamped to [50°F, 120°F]
+- Useful for testing alert behavior under noisy conditions
+
+Method signature:
+  set_fault_injection(enabled: bool, magnitude: float) -> None
+
+Example:
+  ctrl.set_fault_injection(enabled=True, magnitude=10.0)
+  # Injects random ±10°F spikes each tick
+
+================================================================================
+ERROR HANDLING
+================================================================================
+
+In case of exceptions in any component:
+  - API gracefully catches and returns error info in response
+  - "error" field added to response dict (if error occurs)
+  - Simulation continues; no crashes expected
+  - Error field format: {"error": "description", "type": "ErrorType"}
+
+Graceful degradation:
+  - If scheduler has duplicate task_ids, oldest is used
+  - If thresholds are misconfigured (low > high), behavior is undefined
+  - Timestamps must be monotonically increasing (current_time >= last_time)
+
+================================================================================
+PERSISTENCE TASK AUTO-SCHEDULING
+================================================================================
+
+The controller automatically schedules persistence tasks every 5 seconds.
+
+Task ID format: "persist_N" where N is auto-incremented integer
+Due time: simulation_start_time + 5s, +10s, +15s, ...
+Payload: Snapshot of {timestamp, temperature, state}
+
+These tasks appear in scheduled_tasks array when they execute.
+
+================================================================================
+USAGE CONTRACT
+================================================================================
+
+Caller responsibilities:
+  1. Initialize controller with valid parameters
+  2. Call tick() repeatedly in sequence (at your desired interval)
+  3. Pass current unix timestamp to agent updates
+  4. Handle null alert_message gracefully
+  5. Do not modify returned dicts (they are snapshots)
+
+Controller responsibilities:
+  1. Maintain internal state consistency
+  2. Return valid JSON-serializable output each tick
+  3. Track state transitions accurately
+  4. Apply debounce logic correctly
+  5. Schedule and execute persistence tasks on time
+  6. Keep simulation_time in sync with ticks
+
+Performance expectations:
+  - tick() latency: <100ms (Python, no I/O)
+  - JSON serialization: <10ms for full response
+  - Typical response size: 500-1000 bytes
+
+================================================================================
+EXAMPLE RESPONSES
+================================================================================
+
+Example 1: Normal operation (early in warmup)
+{
+  "timestamp": 1000.5,
+  "temperature": 65.0,
+  "state": "NORMAL",
+  "state_changed": false,
+  "alert_message": null,
+  "scheduled_tasks": [],
+  "simulation_time": 0.5,
+  "debug_info": {...}
+}
+
+Example 2: State transition to ALERT_HIGH
+{
+  "timestamp": 1010.0,
+  "temperature": 87.2,
+  "state": "ALERT_HIGH",
+  "state_changed": true,
+  "alert_message": "High temperature alert: 85°F threshold exceeded",
+  "scheduled_tasks": [],
+  "simulation_time": 10.0,
+  "debug_info": {...}
+}
+
+Example 3: Persistence task execution
+{
+  "timestamp": 1015.0,
+  "temperature": 75.5,
+  "state": "NORMAL",
+  "state_changed": false,
+  "alert_message": null,
+  "scheduled_tasks": [
+    {
+      "task_id": "persist_3",
+      "payload": {
+        "type": "persistence",
+        "timestamp": 1015.0,
+        "temperature": 75.5,
+        "state": "NORMAL"
+      },
+      "due_time": 1015.0
+    }
+  ],
+  "simulation_time": 15.0,
+  "debug_info": {...}
+}
+
+================================================================================
+CHANGELOG
+================================================================================
+
+Version 1.0 (Frozen - Day 1):
+  - Initial API contract
+  - 3-state FSM with debounce
+  - Scheduler for persistence tasks
+  - Fault injection support
+  - All response fields finalized
+
+No breaking changes permitted after Day 1 handoff to frontend.
+
+================================================================================

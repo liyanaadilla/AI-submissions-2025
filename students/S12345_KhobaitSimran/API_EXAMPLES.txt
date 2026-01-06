@@ -1,0 +1,497 @@
+================================================================================
+                     API USAGE EXAMPLES
+         HVAC Monitoring System - SimulationController API
+================================================================================
+
+This document provides practical examples of how to use the SimulationController
+API from Python code.
+
+================================================================================
+EXAMPLE 1: BASIC SIMULATION LOOP
+================================================================================
+
+Description:
+  Run a simple 10-second simulation with default parameters.
+  Print temperature and state each tick.
+
+Code:
+```python
+from controller import SimulationController
+
+# Initialize controller with defaults
+ctrl = SimulationController(
+    initial_temp=60,
+    warmup_duration=5,
+    drift_rate=0.5,
+    threshold_high=85,
+    threshold_low=50,
+    debounce_sec=1.5,
+)
+
+# Run for 20 ticks (10 seconds with 0.5s interval)
+print("Starting simulation...")
+for i in range(20):
+    result = ctrl.tick()
+    print(
+        f"[{result['simulation_time']:5.1f}s] "
+        f"Temp: {result['temperature']:6.1f}°F | "
+        f"State: {result['state']:12s} | "
+        f"Tasks: {len(result['scheduled_tasks'])}"
+    )
+    
+    if result['state_changed']:
+        print(f"    ⚠️  ALERT: {result['alert_message']}")
+
+print("Simulation complete!")
+```
+
+Expected output:
+```
+Starting simulation...
+[  0.0s] Temp:   60.0°F | State: NORMAL       | Tasks: 0
+[  0.5s] Temp:   61.0°F | State: NORMAL       | Tasks: 0
+[  1.0s] Temp:   62.0°F | State: NORMAL       | Tasks: 0
+...
+[ 10.0s] Temp:   72.0°F | State: NORMAL       | Tasks: 1
+...
+Simulation complete!
+```
+
+================================================================================
+EXAMPLE 2: HANDLING ALERTS
+================================================================================
+
+Description:
+  Run simulation and log all state transitions with timestamps.
+
+Code:
+```python
+from controller import SimulationController
+import json
+
+ctrl = SimulationController(
+    initial_temp=70,
+    warmup_duration=3,
+    drift_rate=1.0,  # Faster drift to trigger alerts
+    threshold_high=85,
+    threshold_low=55,
+    debounce_sec=1.5,
+)
+
+alert_log = []
+
+# Run for 100 ticks
+for i in range(100):
+    result = ctrl.tick()
+    
+    if result['state_changed']:
+        alert_event = {
+            "tick": i,
+            "time": result['timestamp'],
+            "simulation_time": result['simulation_time'],
+            "state": result['state'],
+            "temperature": result['temperature'],
+            "message": result['alert_message'],
+        }
+        alert_log.append(alert_event)
+        print(f"ALERT at t={result['simulation_time']:.1f}s: {result['alert_message']}")
+
+# Save alert log
+with open("alert_log.json", "w") as f:
+    json.dump(alert_log, f, indent=2)
+
+print(f"\nTotal alerts: {len(alert_log)}")
+print("Log saved to alert_log.json")
+```
+
+Expected behavior:
+  - System initializes in NORMAL state
+  - Temperature rises due to drift
+  - When temp > 85°F for 1.5 seconds, transitions to ALERT_HIGH
+  - When temp < 55°F for 1.5 seconds, transitions to ALERT_LOW
+  - Each transition logged with timestamp
+
+================================================================================
+EXAMPLE 3: FAULT INJECTION TESTING
+================================================================================
+
+Description:
+  Test system behavior under fault conditions (noisy sensor).
+
+Code:
+```python
+from controller import SimulationController
+
+ctrl = SimulationController(
+    initial_temp=70,
+    warmup_duration=2,
+    drift_rate=0.5,
+    threshold_high=85,
+    threshold_low=55,
+    debounce_sec=1.5,
+)
+
+# Normal operation first
+print("=== NORMAL OPERATION ===")
+temps_normal = []
+for _ in range(10):
+    result = ctrl.tick()
+    temps_normal.append(result['temperature'])
+    print(f"Temp: {result['temperature']:.1f}°F")
+
+# Reset and enable fault injection
+ctrl.reset_simulation()
+ctrl.set_fault_injection(enabled=True, magnitude=10.0)
+
+print("\n=== WITH FAULT INJECTION (±10°F) ===")
+temps_fault = []
+for _ in range(10):
+    result = ctrl.tick()
+    temps_fault.append(result['temperature'])
+    print(f"Temp: {result['temperature']:.1f}°F")
+
+# Compare variability
+import statistics
+print(f"\nNormal temp range: {min(temps_normal):.1f} - {max(temps_normal):.1f}°F")
+print(f"Fault temp range: {min(temps_fault):.1f} - {max(temps_fault):.1f}°F")
+print(f"Normal std dev: {statistics.stdev(temps_normal):.2f}°F")
+print(f"Fault std dev: {statistics.stdev(temps_fault):.2f}°F")
+```
+
+Expected behavior:
+  - Normal operation shows smooth temperature progression
+  - Fault injection creates jagged, unpredictable temperature readings
+  - Debounce still prevents rapid state changes
+
+================================================================================
+EXAMPLE 4: PERSISTENCE TASK HANDLING
+================================================================================
+
+Description:
+  Monitor persistence tasks (auto-scheduled every 5 seconds).
+
+Code:
+```python
+from controller import SimulationController
+import json
+
+ctrl = SimulationController()
+
+persistence_records = []
+
+# Run for 60 ticks (30 seconds)
+for i in range(60):
+    result = ctrl.tick()
+    
+    # Check for persistence tasks
+    for task in result['scheduled_tasks']:
+        if task['task_id'].startswith('persist_'):
+            persistence_records.append(task['payload'])
+            print(
+                f"[{result['simulation_time']:5.1f}s] "
+                f"Logged: Temp={task['payload']['temperature']}°F, "
+                f"State={task['payload']['state']}"
+            )
+
+# Save persistence log
+with open("persistence_log.json", "w") as f:
+    json.dump(persistence_records, f, indent=2)
+
+print(f"\nTotal persistence records: {len(persistence_records)}")
+print(f"Expected: ~6 records (every 5 seconds)")
+print("Log saved to persistence_log.json")
+```
+
+Expected behavior:
+  - Persistence tasks scheduled automatically every 5 seconds
+  - Each task captures current temperature and state
+  - 30-second run produces ~6 records
+  - Records available in scheduled_tasks array when due
+
+================================================================================
+EXAMPLE 5: FULL JSON SERIALIZATION
+================================================================================
+
+Description:
+  Capture and serialize full response to JSON for API consumers.
+
+Code:
+```python
+from controller import SimulationController
+import json
+
+ctrl = SimulationController(
+    initial_temp=70,
+    warmup_duration=2,
+    threshold_high=85,
+    threshold_low=50,
+    debounce_sec=1.5,
+)
+
+# Run 5 ticks and capture responses
+responses = []
+for i in range(5):
+    result = ctrl.tick()
+    responses.append(result)
+
+# Save to JSON file
+with open("responses.json", "w") as f:
+    json.dump(responses, f, indent=2)
+
+# Pretty print first response
+print("Sample response:")
+print(json.dumps(responses[0], indent=2))
+
+print(f"\nAll {len(responses)} responses saved to responses.json")
+```
+
+Example JSON output:
+```json
+{
+  "timestamp": 1000.5,
+  "temperature": 61.0,
+  "state": "NORMAL",
+  "state_changed": false,
+  "alert_message": null,
+  "scheduled_tasks": [],
+  "simulation_time": 0.5,
+  "tick_count": 1
+}
+```
+
+================================================================================
+EXAMPLE 6: CUSTOM PARAMETERS
+================================================================================
+
+Description:
+  Configure controller with custom thresholds and tuning parameters.
+
+Code:
+```python
+from controller import SimulationController
+
+# Aggressive thresholds, fast response
+ctrl_aggressive = SimulationController(
+    initial_temp=65,
+    warmup_duration=2,
+    drift_rate=2.0,          # Fast drift
+    threshold_high=80,       # Lower alert threshold
+    threshold_low=60,        # Higher low threshold
+    debounce_sec=0.5,        # Quick response (500ms)
+    update_interval_sec=0.25, # Faster update rate
+)
+
+print("=== AGGRESSIVE CONFIGURATION ===")
+for i in range(10):
+    result = ctrl_aggressive.tick()
+    if result['state_changed']:
+        print(f"ALERT at {result['simulation_time']:.2f}s: {result['alert_message']}")
+    print(f"T={result['simulation_time']:5.2f}s, Temp={result['temperature']:6.1f}°F")
+
+# Conservative thresholds, slow response
+ctrl_conservative = SimulationController(
+    initial_temp=65,
+    warmup_duration=10,      # Long warmup
+    drift_rate=0.1,          # Slow drift
+    threshold_high=95,       # High alert threshold
+    threshold_low=40,        # Low alert threshold
+    debounce_sec=5.0,        # Long debounce (5 sec)
+    update_interval_sec=1.0, # Slower updates
+)
+
+print("\n=== CONSERVATIVE CONFIGURATION ===")
+for i in range(10):
+    result = ctrl_conservative.tick()
+    if result['state_changed']:
+        print(f"ALERT at {result['simulation_time']:.2f}s: {result['alert_message']}")
+    print(f"T={result['simulation_time']:5.2f}s, Temp={result['temperature']:6.1f}°F")
+```
+
+================================================================================
+EXAMPLE 7: SIMULATION STATE INSPECTION
+================================================================================
+
+Description:
+  Access internal state for debugging and diagnostics.
+
+Code:
+```python
+from controller import SimulationController
+import json
+
+ctrl = SimulationController()
+
+# Run a few ticks
+for _ in range(10):
+    ctrl.tick()
+
+# Get full state snapshot
+state = ctrl.get_state()
+
+print("=== CONTROLLER STATE ===")
+print(f"Tick count: {state['tick_count']}")
+print(f"Simulation time: {state['simulation_time']:.1f}s")
+print(f"Current agent state: {state['agent_state']['current_state']}")
+
+print("\n=== SIMULATOR STATE ===")
+sim_state = state['simulator_state']
+print(f"Current temp: {sim_state['current_temp']:.1f}°F")
+print(f"Elapsed time: {sim_state['elapsed_time']:.1f}s")
+print(f"Warmup phase: {sim_state['warmup_phase']}")
+
+print("\n=== SCHEDULER STATE ===")
+sched_state = state['scheduler_state']
+print(f"Pending tasks: {sched_state['pending_count']}")
+print(f"Next task due: {sched_state['next_due_time']}")
+
+print("\nFull state dump:")
+print(json.dumps(state, indent=2, default=str))
+```
+
+================================================================================
+EXAMPLE 8: RESET AND RE-RUN
+================================================================================
+
+Description:
+  Reset simulation and re-run with different parameters.
+
+Code:
+```python
+from controller import SimulationController
+
+ctrl = SimulationController(
+    initial_temp=60,
+    warmup_duration=3,
+    drift_rate=0.5,
+)
+
+# First run
+print("=== RUN 1 ===")
+run1_temps = []
+for _ in range(20):
+    result = ctrl.tick()
+    run1_temps.append(result['temperature'])
+
+print(f"Temp range: {min(run1_temps):.1f} - {max(run1_temps):.1f}°F")
+
+# Reset
+ctrl.reset_simulation()
+ctrl.simulator.drift_direction = -1  # Drift downward this time
+
+# Second run
+print("\n=== RUN 2 (different drift direction) ===")
+run2_temps = []
+for _ in range(20):
+    result = ctrl.tick()
+    run2_temps.append(result['temperature'])
+
+print(f"Temp range: {min(run2_temps):.1f} - {max(run2_temps):.1f}°F")
+```
+
+================================================================================
+EXAMPLE 9: BATCH PROCESSING (STREAMLIT UI PATTERN)
+================================================================================
+
+Description:
+  Pre-generate and cache simulation results for Streamlit frontend.
+
+Code:
+```python
+from controller import SimulationController
+import json
+import pickle
+
+def cache_simulation(num_ticks=300, cache_file="sim_cache.pkl"):
+    """Generate simulation data and cache to file."""
+    ctrl = SimulationController()
+    results = []
+    
+    for _ in range(num_ticks):
+        results.append(ctrl.tick())
+    
+    # Cache binary format (faster load)
+    with open(cache_file, "wb") as f:
+        pickle.dump(results, f)
+    
+    print(f"Cached {len(results)} ticks to {cache_file}")
+    return results
+
+def load_cached_simulation(cache_file="sim_cache.pkl"):
+    """Load cached simulation results."""
+    with open(cache_file, "rb") as f:
+        return pickle.load(f)
+
+# Generate cache
+results = cache_simulation(num_ticks=300)
+
+# Later, in Streamlit app:
+# results = load_cached_simulation()
+# Use results to populate charts, tables, etc.
+
+print(f"Sample results structure:")
+print(f"  Keys: {list(results[0].keys())}")
+print(f"  First result timestamp: {results[0]['timestamp']}")
+print(f"  Last result timestamp: {results[-1]['timestamp']}")
+```
+
+================================================================================
+INTEGRATION WITH STREAMLIT (FRONTEND PATTERN)
+================================================================================
+
+Code pattern for Streamlit app consuming this API:
+
+```python
+import streamlit as st
+from controller import SimulationController
+import pandas as pd
+import plotly.graph_objects as go
+
+# Initialize session state
+if 'ctrl' not in st.session_state:
+    st.session_state.ctrl = SimulationController()
+
+# User controls
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("Run Simulation"):
+        st.session_state.results = []
+        for _ in range(300):
+            st.session_state.results.append(st.session_state.ctrl.tick())
+
+with col2:
+    if st.button("Reset"):
+        st.session_state.ctrl.reset_simulation()
+        st.session_state.results = []
+
+with col3:
+    fault_mode = st.checkbox("Enable Fault Injection")
+    if fault_mode:
+        magnitude = st.slider("Fault magnitude (°F)", 0, 20, 5)
+        st.session_state.ctrl.set_fault_injection(enabled=True, magnitude=magnitude)
+
+# Display results
+if 'results' in st.session_state and st.session_state.results:
+    df = pd.DataFrame(st.session_state.results)
+    
+    # Chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=df['temperature'], mode='lines', name='Temperature'))
+    st.plotly_chart(fig)
+    
+    # Current status
+    latest = st.session_state.results[-1]
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Temperature", f"{latest['temperature']}°F")
+    col2.metric("State", latest['state'])
+    col3.metric("Time", f"{latest['simulation_time']:.1f}s")
+    col4.metric("Tasks", len(latest['scheduled_tasks']))
+    
+    # Alerts log
+    alerts = [r for r in st.session_state.results if r['state_changed']]
+    if alerts:
+        st.warning(f"Total alerts: {len(alerts)}")
+        for alert in alerts:
+            st.info(f"{alert['alert_message']} @ {alert['simulation_time']:.1f}s")
+```
+
+================================================================================
