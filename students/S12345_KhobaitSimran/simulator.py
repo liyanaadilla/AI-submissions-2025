@@ -56,12 +56,17 @@ class TemperatureSimulator:
         Returns:
             Current temperature in °F (range 50–120)
         """
+        import math
+        
         self.elapsed_time += elapsed_time_sec
         
         if self.elapsed_time <= self.warmup_duration_sec:
-            # Warmup phase: linear ramp from initial_temp
-            warmup_rate = 10.0 / self.warmup_duration_sec  # Ramp up 10°F during warmup
-            self.current_temp = self.initial_temp + (warmup_rate * self.elapsed_time)
+            # Warmup phase: exponential decay T(t) = T_amb + (T_op - T_amb) * (1 - e^(-kt))
+            # Where T_amb = initial_temp, T_op = initial_temp + 10, k = decay constant
+            T_amb = self.initial_temp
+            T_op = self.initial_temp + 10.0  # Target operating temp (10°F above initial)
+            k = 1.0 / self.warmup_duration_sec  # Decay constant ensures ~95% reached in warmup_duration
+            self.current_temp = T_amb + (T_op - T_amb) * (1 - math.exp(-k * self.elapsed_time))
         else:
             # Drift phase: apply drift after warmup
             drift_amount = self.drift_rate * self.drift_direction * elapsed_time_sec

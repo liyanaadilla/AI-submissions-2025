@@ -205,3 +205,39 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# Documentation and Text Files
+*.txt
+*.md
+!README.md
+!docs/**/*.md
+
+# Generated Report Files
+*_REPORT.txt
+*_SUMMARY.txt
+*_CHECKLIST.md
+*_FIXES_*.md
+*_DOCUMENTATION.txt
+*_IMPLEMENTATION*.txt
+
+# Firebase and Config Files
+ysmai-*-firebase-adminsdk-*.json
+
+# Samples and Generated Data
+/samples/
+/models/
+sample_traces.json
+
+# Node dependencies
+node_modules/
+.npm
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+.next/
+
+# VS Code settings (optional - uncomment if needed)
+# .vscode/
+# .vscode/settings.json

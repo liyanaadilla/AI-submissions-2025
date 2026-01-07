@@ -116,11 +116,15 @@ class SimulationController:
         
         # Generate synthetic sensor data for frontend
         # These would come from real sensors in production
+        import math
         rpm = 500 + int(self.tick_count * 5) % 2500  # Simulated RPM
         oil_pressure_psi = 40.0 + (temperature - 60) * 0.3 + \
                           (rpm / 3000) * 15  # Pressure correlates with temp and RPM
-        vibration_mms = 5.0 + abs((temperature - 72) * 0.5) + \
-                       (rpm / 3000) * 8  # Vibration correlates with RPM
+        # Vibration RMS: V_RMS(t) = sqrt(BaseVib^2 + (FaultSeverity*RPMFactor)^2)
+        base_vibration = 5.0
+        temp_effect = abs((temperature - 72) * 0.5)
+        rpm_effect = (rpm / 3000) * 8
+        vibration_mms = math.sqrt(base_vibration**2 + temp_effect**2 + rpm_effect**2)
         voltage_v = 13.2 + (rpm / 3000) * 0.5 - (temperature - 72) * 0.01
         
         # Clamp values to valid ranges
@@ -210,6 +214,7 @@ class SimulationController:
             Dictionary with ML predictions or None if ML unavailable
         """
         try:
+            import time as time_module
             from ml_training_kaggle import MLModelTrainer
             
             # Lazy load and cache trainer
@@ -219,33 +224,43 @@ class SimulationController:
             
             trainer = self._ml_trainer
             
-            # Get predictions
+            # Get predictions with timing
+            start_time = time_module.time()
             fault_pred = trainer.predict_fault(
                 rpm=rpm,
                 pressure=oil_pressure_psi,
                 temp=temperature,
                 vib=vibration_mms
             )
+            fault_inference_time = (time_module.time() - start_time) * 1000  # Convert to ms
             
+            start_time = time_module.time()
             vibration_pred = trainer.detect_vibration_anomaly(
                 bearing_1=vibration_mms,
                 bearing_2=vibration_mms * 0.9
             )
+            vibration_inference_time = (time_module.time() - start_time) * 1000  # Convert to ms
             
+            start_time = time_module.time()
             pressure_pred = trainer.predict_pressure(flow_rate=rpm/100)
+            pressure_inference_time = (time_module.time() - start_time) * 1000  # Convert to ms
             
             return {
                 "fault_detection": {
                     "detected": fault_pred.get('fault', False),
-                    "confidence": fault_pred.get('confidence', 0.0)
+                    "confidence": fault_pred.get('confidence', 0.0),
+                    "inference_time": fault_inference_time
                 },
                 "vibration_anomaly": {
                     "detected": vibration_pred.get('anomaly', False),
-                    "score": vibration_pred.get('score', 0.0)
+                    "score": vibration_pred.get('score', 0.0),
+                    "inference_time": vibration_inference_time
                 },
                 "pressure_prediction": {
                     "predicted_pressure": pressure_pred.get('predicted_pressure', oil_pressure_psi),
-                    "actual_pressure": oil_pressure_psi
+                    "actual_pressure": oil_pressure_psi,
+                    "confidence": pressure_pred.get('confidence', 0.85),
+                    "inference_time": pressure_inference_time
                 }
             }
         
