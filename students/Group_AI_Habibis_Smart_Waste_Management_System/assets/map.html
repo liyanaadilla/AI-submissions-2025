@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<style>
+			:root {
+				--blue: #3b82f6;
+				--green: #22c55e;
+				--orange: #f59e0b;
+				--red: #ef4444;
+				--bg-deep: #0f1419;
+				--bg-panel: #1a1f26;
+				--text-primary: #f0f2f5;
+				--text-secondary: #8b949e;
+				--border: rgba(255, 255, 255, 0.08);
+			}
+
+			body {
+				margin: 0;
+				background-color: var(--bg-deep);
+				color: var(--text-primary);
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+				overflow: hidden;
+				display: flex;
+				flex-direction: column;
+				height: 100vh;
+				user-select: none;
+			}
+
+			/* --- LAYOUT --- */
+			#hud-top {
+				height: 44px;
+				background: var(--bg-panel);
+				border-bottom: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 0 20px;
+				z-index: 100;
+			}
+
+			#viewport {
+				flex: 1;
+				position: relative;
+				background: var(--bg-deep);
+				overflow: hidden;
+			}
+
+			#hud-bottom {
+				height: 56px;
+				background: var(--bg-panel);
+				border-top: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				padding: 0 20px;
+				z-index: 100;
+				overflow-x: auto;
+				gap: 16px;
+			}
+
+			/* --- TOP BAR ELEMENTS --- */
+			.brand {
+				color: var(--text-primary);
+				font-weight: 600;
+				font-size: 14px;
+				letter-spacing: 0.02em;
+			}
+
+			.sys-stat {
+				display: flex;
+				gap: 24px;
+				font-size: 13px;
+				color: var(--text-secondary);
+			}
+
+			.sys-stat b {
+				color: var(--text-primary);
+				font-weight: 500;
+			}
+
+			/* --- BOTTOM BAR ELEMENTS (FLEET) --- */
+			.fleet-card {
+				min-width: 130px;
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				border-right: 1px solid var(--border);
+				padding-right: 16px;
+			}
+
+			.f-header {
+				display: flex;
+				justify-content: space-between;
+				font-size: 12px;
+				font-weight: 500;
+			}
+
+			.f-bar-bg {
+				width: 100%;
+				height: 3px;
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 2px;
+			}
+
+			.f-bar-fill {
+				height: 100%;
+				border-radius: 2px;
+				transition: width 0.3s;
+			}
+
+			/* --- LEGEND --- */
+			#legend-panel {
+				position: absolute;
+				top: 16px;
+				right: 16px;
+				width: 180px;
+				background: var(--bg-panel);
+				border: 1px solid var(--border);
+				padding: 12px;
+				border-radius: 6px;
+				pointer-events: none;
+			}
+			.legend-title {
+				font-size: 11px;
+				color: var(--text-secondary);
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				margin-bottom: 8px;
+				font-weight: 500;
+			}
+			.legend-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 6px;
+				font-size: 12px;
+				color: var(--text-secondary);
+			}
+			.l-icon {
+				width: 10px;
+				height: 10px;
+				border-radius: 2px;
+				display: inline-block;
+			}
+
+			/* --- PHASE OVERLAY --- */
+			#phase-overlay {
+				position: absolute;
+				bottom: 16px;
+				left: 16px;
+				pointer-events: none;
+			}
+			#phase-title {
+				font-size: 18px;
+				font-weight: 600;
+				color: var(--text-primary);
+			#phase-subtitle {
+				font-size: 11px;
+				color: var(--text-secondary);
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				margin-bottom: 4px;
+			}
+
+			/* --- CANVAS --- */
+			canvas {
+				display: block;
+			}
+
+			#loader {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: var(--text-secondary);
+				font-size: 14px;
+			}
+		</style>
+	</head>
+	<body>
+		<!-- TOP HUD -->
+		<div id="hud-top">
+			<div class="brand">Waste Collection Simulation</div>
+			<div class="sys-stat">
+				<span>FPS: <b id="fps">60</b></span>
+				<span>Critical: <b style="color: var(--red)" id="crit">0</b></span>
+				<span>Status: <b style="color: var(--green)">Active</b></span>
+			</div>
+		</div>
+
+		<!-- MAIN VIEWPORT -->
+		<div id="viewport">
+			<canvas id="mainCanvas"></canvas>
+			<div id="loader">Loading...</div>
+
+			<!-- LEGEND -->
+			<div id="legend-panel">
+				<div class="legend-title">Legend</div>
+				<div class="legend-item">
+					<span class="l-icon" style="background: var(--red)"></span>
+					<span>Critical Bin (>80%)</span>
+				</div>
+				<div class="legend-item">
+					<span class="l-icon" style="background: var(--green)"></span>
+					<span>Eligible for Service</span>
+				</div>
+				<div class="legend-item">
+					<span class="l-icon" style="background: var(--orange)"></span>
+					<span>Blocked</span>
+				</div>
+				<div class="legend-item">
+					<span
+						class="l-icon"
+						style="background: rgba(251, 191, 36, 0.4)"
+					></span>
+					<span>A* Search Space</span>
+				</div>
+				<div class="legend-item">
+					<span class="l-icon" style="border-bottom: 2px dashed #666"></span>
+					<span>Baseline Route</span>
+				</div>
+				<div class="legend-item">
+					<span
+						class="l-icon"
+						style="border-bottom: 2px solid var(--blue)"
+					></span>
+					<span>Optimized Route</span>
+				</div>
+			</div>
+
+			<div id="phase-overlay">
+				<div id="phase-subtitle">Status</div>
+				<div id="phase-title">Initializing</div>
+			</div>
+		</div>
+
+		<!-- BOTTOM HUD -->
+		<div id="hud-bottom" id="fleet-container">
+			<!-- JS Injected fleet cards -->
+		</div>
+
+		<script>
+			const data = __DATA_JSON__;
+
+			// --- CONFIG ---
+			const cfg = {
+				isoAngle: 0.5,
+				gridSize: data.grid_size,
+				cellSize: 45,
+				camX: 0,
+				camY: 0,
+				camScale: 1.0,
+				colors: {
+					floor: "#1a1f26",
+					grid: "#2d353f",
+					binBase: "#3a4350",
+					binFull: "#ef4444",
+					binEmpty: "#4b5563",
+					binEligible: "#22c55e",
+					binBlocked: "#f59e0b",
+					binIgnore: "#4b5563",
+					truck: ["#3b82f6", "#8b5cf6", "#22c55e", "#f59e0b"],
+				},
+			};
+
+			const canvas = document.getElementById("mainCanvas");
+			const ctx = canvas.getContext("2d");
+			const loader = document.getElementById("loader");
+
+			// --- RESIZE & AUTO-FIT ---
+			function resize() {
+				canvas.width = document.getElementById("viewport").clientWidth;
+				canvas.height = document.getElementById("viewport").clientHeight;
+
+				const padding = 60;
+				const availW = canvas.width - padding;
+				const availH = canvas.height - padding - 80;
+
+				const fitW = availW / (cfg.gridSize * 2);
+				const fitH = availH / (cfg.gridSize * 2 * cfg.isoAngle);
+				cfg.cellSize = Math.min(fitW, fitH, 60);
+
+				cfg.camX = canvas.width / 2;
+				const centerIsoY = cfg.gridSize * cfg.cellSize * cfg.isoAngle;
+				cfg.camY = canvas.height / 2 - centerIsoY;
+			}
+			window.addEventListener("resize", resize);
+			resize();
+
+			// --- MATH ---
+			function toIso(gridX, gridY, gridZ = 0) {
+				const x = (gridX - gridY) * cfg.cellSize;
+				const y = (gridX + gridY) * cfg.cellSize * cfg.isoAngle;
+				return {
+					x: cfg.camX + x * cfg.camScale,
+					y: cfg.camY + (y - gridZ * cfg.cellSize) * cfg.camScale,
+				};
+			}
+
+			// --- ENTITIES ---
+			const bins = data.bins.map((b) => {
+				let color = b.is_critical ? cfg.colors.binFull : cfg.colors.binEmpty;
+
+				// Override color for Reason Phase (but not Predict phase - predicted stays red)
+				if (b.visual_state === "eligible") color = cfg.colors.binEligible;
+				else if (b.visual_state === "blocked") color = cfg.colors.binBlocked;
+				else if (b.visual_state === "irrelevant") color = cfg.colors.binIgnore;
+				else if (b.visual_state === "predicted") color = cfg.colors.binFull; // Red for predicted bins
+
+				return {
+					...b,
+					height: 0.1 + (b.fill / 100) * 2.0,
+					color: color,
+				};
+			});
+
+			const trucks = Object.keys(data.routes).map((tid, idx) => ({
+				id: tid,
+				color: cfg.colors.truck[idx % 4],
+				path: data.routes[tid],
+				baseline:
+					data.baseline_routes && data.baseline_routes[tid]
+						? data.baseline_routes[tid]
+						: [],
+				trail: [],
+				progress: 0,
+				pos: data.routes[tid][0],
+				dir: { x: 1, y: 0 },
+			}));
+
+			// --- DRAW UTILS ---
+			function drawPoly(points, color, glow = false) {
+				ctx.beginPath();
+				ctx.moveTo(points[0].x, points[0].y);
+				for (let i = 1; i < points.length; i++)
+					ctx.lineTo(points[i].x, points[i].y);
+				ctx.closePath();
+				ctx.fillStyle = color;
+				if (glow) {
+					ctx.shadowColor = color;
+					ctx.shadowBlur = 15;
+				}
+				ctx.fill();
+				if (glow) ctx.shadowBlur = 0;
+				ctx.strokeStyle = "rgba(0,0,0,0.3)";
+				ctx.lineWidth = 1;
+				ctx.stroke();
+			}
+
+			function drawText(text, x, y, color = "#fff", size = 10) {
+				ctx.fillStyle = color;
+				ctx.font = `bold ${size}px 'Rajdhani'`;
+				ctx.textAlign = "center";
+				ctx.fillText(text, x, y);
+			}
+
+			// --- STORY MODE STATE ---
+			const story = {
+				phase1_end: 1.5, // SENSE (Faster)
+				phase2_end: 3.0, // ALLOCATE (Faster)
+				phase3_end: 7.0, // PLAN (Significantly Longer - 4s duration)
+				// EXECUTE after 7.0s
+			};
+
+			function updatePhaseText(t) {
+				const title = document.getElementById("phase-title");
+				const sub = document.getElementById("phase-subtitle");
+				const step = data.current_step;
+
+				if (step <= 0) {
+					sub.innerText = "Phase 1";
+					title.innerText = "Sensing Environment";
+					title.style.color = "#f0f2f5";
+				} else if (step == 1) {
+					sub.innerText = "Phase 2";
+					title.innerText = "Predicting Overflow Risk";
+					title.style.color = "#f59e0b";
+				} else if (step == 2) {
+					sub.innerText = "Phase 3";
+					title.innerText = "Applying Rules & Constraints";
+					title.style.color = "#f472b6";
+				} else if (step == 3) {
+					sub.innerText = "Phase 4";
+					title.innerText = "Allocating Tasks";
+					title.style.color = "#8b5cf6";
+				} else if (step == 4) {
+					sub.innerText = "Phase 5";
+					title.innerText = "Computing Optimal Routes";
+					title.style.color = "#3b82f6";
+				} else if (step == 5) {
+					sub.innerText = "Phase 6";
+					title.innerText = "Executing Collection";
+					title.style.color = "#22c55e";
+				} else {
+					sub.innerText = "Phase 7";
+					title.innerText = "Monitoring & Adapting";
+					title.style.color = "#06b6d4";
+				}
+			}
+
+			// --- VISUALIZATION LOOP ---
+			let time = 0;
+
+			function loop() {
+				time += 0.03; // Time step
+				updatePhaseText(time);
+
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// 1. Grid
+				ctx.strokeStyle = cfg.colors.grid;
+				ctx.lineWidth = 1;
+				const sz = cfg.gridSize;
+				for (let i = 0; i <= sz; i++) {
+					const s = toIso(i, 0);
+					const e = toIso(i, sz);
+					ctx.beginPath();
+					ctx.moveTo(s.x, s.y);
+					ctx.lineTo(e.x, e.y);
+					ctx.stroke();
+					const s2 = toIso(0, i);
+					const e2 = toIso(sz, i);
+					ctx.beginPath();
+					ctx.moveTo(s2.x, s2.y);
+					ctx.lineTo(e2.x, e2.y);
+					ctx.stroke();
+				}
+
+				// --- PHASE 3: A* SCANNER ---
+				if (
+					time > story.phase2_end &&
+					time < story.phase3_end &&
+					data.scanned_nodes
+				) {
+					const pulse = 0.25 + Math.sin(time * 8.0) * 0.15;
+
+					data.scanned_nodes.forEach((node) => {
+						const p1 = toIso(node[0], node[1]);
+						const p2 = toIso(node[0] + 1, node[1]);
+						const p3 = toIso(node[0] + 1, node[1] + 1);
+						const p4 = toIso(node[0], node[1] + 1);
+
+						ctx.beginPath();
+						ctx.moveTo(p1.x, p1.y);
+						ctx.lineTo(p2.x, p2.y);
+						ctx.lineTo(p3.x, p3.y);
+						ctx.lineTo(p4.x, p4.y);
+
+						ctx.fillStyle = `rgba(251, 191, 36, ${pulse})`;
+						ctx.fill();
+
+						ctx.strokeStyle = `rgba(251, 191, 36, ${pulse + 0.1})`;
+						ctx.lineWidth = 1;
+						ctx.stroke();
+					});
+				}
+
+				// --- PHASE 2.5: BASELINE GHOST ROUTE ---
+				// Show this *during* the planning phase to contrast
+				if (time > story.phase2_end) {
+					trucks.forEach((t) => {
+						if (t.baseline.length > 0) {
+							ctx.strokeStyle = "#444"; // Dark grey
+							ctx.setLineDash([5, 5]);
+							ctx.lineWidth = 2;
+							ctx.beginPath();
+
+							const start = toIso(
+								t.baseline[0][0] + 0.5,
+								t.baseline[0][1] + 0.5
+							);
+							ctx.moveTo(start.x, start.y);
+
+							for (let i = 1; i < t.baseline.length; i++) {
+								const p = toIso(t.baseline[i][0] + 0.5, t.baseline[i][1] + 0.5);
+								ctx.lineTo(p.x, p.y);
+							}
+							ctx.stroke();
+							ctx.setLineDash([]); // Reset
+						}
+					});
+				}
+
+				// --- PHASE 2: ALLOCATION VECTORS ---
+				if (time > story.phase1_end && time < story.phase3_end + 1.0) {
+					trucks.forEach((t) => {
+						if (t.path.length > 0) {
+							const dest = t.path[t.path.length - 1];
+							const startPos = toIso(
+								t.path[0][0] + 0.5,
+								t.path[0][1] + 0.5,
+								0.5
+							);
+							const endPos = toIso(dest[0] + 0.5, dest[1] + 0.5, 0.5);
+
+							ctx.setLineDash([5, 5]);
+							ctx.strokeStyle = t.color;
+							ctx.lineDashOffset = -time * 30;
+							ctx.lineWidth = 1;
+							ctx.globalAlpha = 0.8;
+
+							ctx.beginPath();
+							ctx.moveTo(startPos.x, startPos.y);
+							ctx.lineTo(endPos.x, endPos.y);
+							ctx.stroke();
+							ctx.setLineDash([]);
+							ctx.globalAlpha = 1.0;
+						}
+					});
+				}
+
+				// --- PHASE 4: PATHS & MOVEMENT ---
+				const showPaths = time > story.phase3_end;
+
+				if (showPaths) {
+					trucks.forEach((t) => {
+						if (t.path.length < 2) return;
+						ctx.strokeStyle = t.color;
+						ctx.globalAlpha = 0.5;
+						ctx.lineWidth = 3;
+						ctx.lineCap = "round";
+						ctx.beginPath();
+						const start = toIso(t.path[0][0] + 0.5, t.path[0][1] + 0.5);
+						ctx.moveTo(start.x, start.y);
+						for (let i = 1; i < t.path.length; i++) {
+							const p = toIso(t.path[i][0] + 0.5, t.path[i][1] + 0.5);
+							ctx.lineTo(p.x, p.y);
+						}
+						ctx.stroke();
+						ctx.globalAlpha = 1.0;
+					});
+				}
+
+				// 3. Bins (Always Visible - SENSE PHASE)
+				bins.sort((a, b) => a.x + a.y - (b.x + b.y));
+				bins.forEach((b) => {
+					// Pulse critical bins in Phase 1
+					let color = b.color;
+					if (time < story.phase1_end && b.is_critical) {
+						if (Math.sin(time * 6) > 0) ctx.shadowBlur = 12;
+						ctx.shadowColor = "#ef4444";
+					}
+
+					const x = b.x + 0.2,
+						y = b.y + 0.2,
+						w = 0.6,
+						h = b.height;
+					const p0 = toIso(x, y);
+					const p1 = toIso(x + w, y);
+					const p2 = toIso(x + w, y + w);
+					const p3 = toIso(x, y + w);
+					const t0 = toIso(x, y, h);
+					const t1 = toIso(x + w, y, h);
+					const t2 = toIso(x + w, y + w, h);
+					const t3 = toIso(x, y + w, h);
+
+					drawPoly([p2, p3, t3, t2], b.color);
+					drawPoly([p1, p2, t2, t1], b.color);
+
+					// Top Face
+					ctx.beginPath();
+					ctx.moveTo(t0.x, t0.y);
+					ctx.lineTo(t1.x, t1.y);
+					ctx.lineTo(t2.x, t2.y);
+					ctx.lineTo(t3.x, t3.y);
+					ctx.closePath();
+					ctx.fillStyle = b.color;
+					if (b.is_critical) {
+						ctx.shadowBlur = 15;
+						ctx.shadowColor = b.color;
+					}
+					ctx.fill();
+					ctx.shadowBlur = 0;
+
+					// Stroke
+					ctx.strokeStyle = "rgba(0,0,0,0.3)";
+					ctx.lineWidth = 1;
+
+					// Special Visuals for Reason Phase
+					if (b.visual_state === "eligible") {
+						ctx.strokeStyle = "#fff";
+						ctx.lineWidth = 2;
+					}
+					ctx.stroke();
+
+					// Draw 'X' for blocked bins
+					if (b.visual_state === "blocked") {
+						ctx.strokeStyle = "#000";
+						ctx.lineWidth = 3;
+						ctx.beginPath();
+						ctx.moveTo(t0.x + 5, t0.y + 5);
+						ctx.lineTo(t2.x - 5, t2.y - 5);
+						ctx.moveTo(t1.x - 5, t1.y + 5);
+						ctx.lineTo(t3.x + 5, t3.y - 5);
+						ctx.stroke();
+
+						ctx.strokeStyle = "#ff0000";
+						ctx.lineWidth = 2;
+						ctx.beginPath();
+						ctx.moveTo(t0.x + 5, t0.y + 5);
+						ctx.lineTo(t2.x - 5, t2.y - 5);
+						ctx.moveTo(t1.x - 5, t1.y + 5);
+						ctx.lineTo(t3.x + 5, t3.y - 5);
+						ctx.stroke();
+					}
+
+					// Draw Bin ID for Allocation Phase
+					if (b.visual_state === "eligible" || b.is_critical) {
+						const labelPos = toIso(x + w / 2, y + w / 2, h + 0.5);
+						drawText(`B${b.id}`, labelPos.x, labelPos.y, "#fff", 12);
+					}
+				});
+
+				// 4. Trucks (Move only in Phase 4)
+				if (showPaths) {
+					trucks.forEach((t) => {
+						if (t.path.length > 1 && t.progress < t.path.length - 1) {
+							t.progress += 0.05; // speed
+							const idx = Math.floor(t.progress);
+							const next = Math.min(idx + 1, t.path.length - 1);
+							const alpha = t.progress - idx;
+							const p1 = t.path[idx];
+							const p2 = t.path[next];
+							t.pos = {
+								x: p1[0] + (p2[0] - p1[0]) * alpha + 0.5,
+								y: p1[1] + (p2[1] - p1[1]) * alpha + 0.5,
+							};
+							t.dir = { x: p2[0] - p1[0], y: p2[1] - p1[1] };
+							if (t.dir.x == 0 && t.dir.y == 0) t.dir = { x: 1, y: 0 };
+							t.trail.push({ x: t.pos.x, y: t.pos.y });
+							if (t.trail.length > 20) t.trail.shift();
+						} else if (t.path.length > 0) {
+							t.pos = {
+								x: t.path[t.path.length - 1][0] + 0.5,
+								y: t.path[t.path.length - 1][1] + 0.5,
+							};
+						}
+
+						// Trail
+						if (t.trail.length > 1) {
+							ctx.beginPath();
+							ctx.strokeStyle = t.color;
+							for (let i = 0; i < t.trail.length - 1; i++) {
+								const pA = toIso(t.trail[i].x, t.trail[i].y, 0.2);
+								const pB = toIso(t.trail[i + 1].x, t.trail[i + 1].y, 0.2);
+								ctx.globalAlpha = i / 20;
+								ctx.lineWidth = i * 0.5;
+								ctx.moveTo(pA.x, pA.y);
+								ctx.lineTo(pB.x, pB.y);
+								ctx.stroke();
+							}
+							ctx.globalAlpha = 1.0;
+						}
+
+						// 3D Truck
+						const tx = t.pos.x - 0.3,
+							ty = t.pos.y - 0.3,
+							tz = 0.4,
+							tw = 0.6;
+						const b0 = toIso(tx, ty, tz),
+							b1 = toIso(tx + tw, ty, tz),
+							b2 = toIso(tx + tw, ty + tw, tz),
+							b3 = toIso(tx, ty + tw, tz);
+						const top0 = toIso(tx, ty, tz + 0.4),
+							top1 = toIso(tx + tw, ty, tz + 0.4),
+							top2 = toIso(tx + tw, ty + tw, tz + 0.4),
+							top3 = toIso(tx, ty + tw, tz + 0.4);
+						drawPoly([b2, b3, top3, top2], "#333");
+						drawPoly([b1, b2, top2, top1], "#333");
+						drawPoly([top0, top1, top2, top3], t.color, true);
+
+						// Headlights
+						const hStart = toIso(t.pos.x, t.pos.y, 0.4);
+						const hEnd1 = toIso(
+							t.pos.x + t.dir.x * 3 + t.dir.y,
+							t.pos.y + t.dir.y * 3 - t.dir.x,
+							0
+						);
+						const hEnd2 = toIso(
+							t.pos.x + t.dir.x * 3 - t.dir.y,
+							t.pos.y + t.dir.y * 3 + t.dir.x,
+							0
+						);
+						const grad = ctx.createLinearGradient(
+							hStart.x,
+							hStart.y,
+							(hEnd1.x + hEnd2.x) / 2,
+							(hEnd1.y + hEnd2.y) / 2
+						);
+						grad.addColorStop(0, "rgba(255, 255, 255, 0.4)");
+						grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+						ctx.fillStyle = grad;
+						ctx.beginPath();
+						ctx.moveTo(hStart.x, hStart.y);
+						ctx.lineTo(hEnd1.x, hEnd1.y);
+						ctx.lineTo(hEnd2.x, hEnd2.y);
+						ctx.fill();
+
+						// Update HUD
+						const el = document.getElementById(`prog-${t.id}`);
+						if (el && t.path.length > 0)
+							el.style.width =
+								Math.min(100, (t.progress / t.path.length) * 100) + "%";
+					});
+				}
+
+				requestAnimationFrame(loop);
+			}
+
+			// --- INIT DOM ---
+			const fleetDiv = document.getElementById("hud-bottom");
+			trucks.forEach((t) => {
+				const div = document.createElement("div");
+				div.className = "fleet-card";
+				div.innerHTML = `
+                <div class="f-header"><span style="color:${t.color}">Truck ${t.id}</span><span style="color: #8b949e">Active</span></div>
+                <div class="f-bar-bg"><div class="f-bar-fill" id="prog-${t.id}" style="width:0%; background:${t.color}"></div></div>
+            `;
+				fleetDiv.appendChild(div);
+			});
+			document.getElementById("crit").innerText = bins.filter(
+				(b) => b.is_critical
+			).length;
+			loader.style.display = "none";
+
+			loop();
+		</script>
+	</body>
+</html>
