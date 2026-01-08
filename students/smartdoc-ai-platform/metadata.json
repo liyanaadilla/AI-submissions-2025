@@ -1,0 +1,7 @@
+{
+  "name": "SmartDoc AI Platform",
+  "description": "Intelligent Document Digitization Platform using Gemini for OCR, classification, and knowledge representation based validation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

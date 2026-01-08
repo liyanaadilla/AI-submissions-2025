@@ -1,0 +1,16 @@
+Project: SmartDoc OCR System
+
+Requirements:
+- Node.js 
+- npm
+- GEMINI_API_KEY set in a .env file
+
+How to Run:
+1. Install dependencies:
+   npm install
+
+2. Create a .env file in the project root with:
+   GEMINI_API_KEY=your_api_key_here
+
+3. Start the development server:
+   npm run dev
