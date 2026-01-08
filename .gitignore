@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+execution_log.txt
+
