@@ -143,6 +143,35 @@ External configuration dependencies
 
 ✅ Use small sample data or dummy inputs for demonstration.
 
+## 🎯 YSMAI Demo & Presentation Guide
+
+For the YSMAI HVAC Monitoring System (students/S12345_KhobaitSimran/):
+
+### Quickest Demo (Streamlit)
+```bash
+pip install -r students/S12345_KhobaitSimran/requirements.txt
+streamlit run streamlit_app.py
+```
+Opens at `http://localhost:8501` with interactive simulation.
+
+### Full Stack Demo (React + Backend)
+
+See [DEMO_SETUP.md](DEMO_SETUP.md) for complete instructions including:
+- Backend setup
+- React frontend integration
+- Connection status & fallback modes
+- Demo checklist for professor meeting
+
+### Key Features Demonstrated
+✅ Real-time SCADA dashboard (React + Tailwind + Recharts)
+✅ FSM state machine with 1.5s debounce (NORMAL → ALERT)
+✅ ML predictions (fault detection, anomaly scoring)
+✅ Persistence task scheduling (~5s intervals)
+✅ Fault injection toggle for testing
+✅ Backend integration with graceful fallback to simulation
+
+---
+
 🔹 Late or Invalid Submissions
 
 Pull Requests submitted after the deadline may be penalised.

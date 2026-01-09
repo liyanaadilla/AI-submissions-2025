@@ -1,0 +1,324 @@
+{
+  "timestamp": "2026-01-07T00:23:32.212617",
+  "summary": {
+    "total_tests": 52,
+    "passed": 51,
+    "failed": 1,
+    "pass_rate": 98.07692307692307,
+    "duration_seconds": 320.53206300735474
+  },
+  "results": [
+    {
+      "test": "Field 'timestamp' present",
+      "passed": true,
+      "message": "Value: 1767716292.180557",
+      "timestamp": "2026-01-07T00:18:11.724408"
+    },
+    {
+      "test": "Field 'temperature' present",
+      "passed": true,
+      "message": "Value: 61.0",
+      "timestamp": "2026-01-07T00:18:11.724431"
+    },
+    {
+      "test": "Field 'rpm' present",
+      "passed": true,
+      "message": "Value: 505",
+      "timestamp": "2026-01-07T00:18:11.724434"
+    },
+    {
+      "test": "Field 'oil_pressure_psi' present",
+      "passed": true,
+      "message": "Value: 42.8",
+      "timestamp": "2026-01-07T00:18:11.724437"
+    },
+    {
+      "test": "Field 'vibration_mms' present",
+      "passed": true,
+      "message": "Value: 11.8",
+      "timestamp": "2026-01-07T00:18:11.724438"
+    },
+    {
+      "test": "Field 'voltage_v' present",
+      "passed": true,
+      "message": "Value: 13.4",
+      "timestamp": "2026-01-07T00:18:11.724440"
+    },
+    {
+      "test": "Field 'state' present",
+      "passed": true,
+      "message": "Value: NORMAL",
+      "timestamp": "2026-01-07T00:18:11.724442"
+    },
+    {
+      "test": "Field 'state_changed' present",
+      "passed": true,
+      "message": "Value: False",
+      "timestamp": "2026-01-07T00:18:11.724444"
+    },
+    {
+      "test": "Field 'alert_message' present",
+      "passed": true,
+      "message": "Value: None",
+      "timestamp": "2026-01-07T00:18:11.724446"
+    },
+    {
+      "test": "Field 'simulation_time' present",
+      "passed": true,
+      "message": "Value: 0.5",
+      "timestamp": "2026-01-07T00:18:11.724448"
+    },
+    {
+      "test": "Field 'scheduled_tasks' present",
+      "passed": true,
+      "message": "Value: []",
+      "timestamp": "2026-01-07T00:18:11.724450"
+    },
+    {
+      "test": "Field 'ml_insights' present",
+      "passed": true,
+      "message": "Value: {'fault_detection': {'detected': False, 'confidence': 1.0}, 'vibration_anomaly': {'detected': True, 'score': 0.6495708351409916}, 'pressure_prediction': {'predicted_pressure': 34.0546034072922, 'actual_pressure': 42.824999999999996}}",
+      "timestamp": "2026-01-07T00:18:11.724459"
+    },
+    {
+      "test": "State valid",
+      "passed": true,
+      "message": "State: NORMAL",
+      "timestamp": "2026-01-07T00:18:11.724463"
+    },
+    {
+      "test": "state_changed is boolean",
+      "passed": true,
+      "message": "",
+      "timestamp": "2026-01-07T00:18:11.724465"
+    },
+    {
+      "test": "alert_message is string or None",
+      "passed": true,
+      "message": "Type: <class 'NoneType'>",
+      "timestamp": "2026-01-07T00:18:11.724467"
+    },
+    {
+      "test": "Type of 'timestamp' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754020"
+    },
+    {
+      "test": "Type of 'temperature' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754029"
+    },
+    {
+      "test": "Type of 'rpm' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'int'>",
+      "timestamp": "2026-01-07T00:18:11.754032"
+    },
+    {
+      "test": "Type of 'oil_pressure_psi' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754034"
+    },
+    {
+      "test": "Type of 'vibration_mms' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754037"
+    },
+    {
+      "test": "Type of 'voltage_v' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754039"
+    },
+    {
+      "test": "Type of 'state' correct",
+      "passed": true,
+      "message": "Expected: <class 'str'>, Got: <class 'str'>",
+      "timestamp": "2026-01-07T00:18:11.754041"
+    },
+    {
+      "test": "Type of 'state_changed' correct",
+      "passed": true,
+      "message": "Expected: <class 'bool'>, Got: <class 'bool'>",
+      "timestamp": "2026-01-07T00:18:11.754043"
+    },
+    {
+      "test": "Type of 'alert_message' correct",
+      "passed": true,
+      "message": "Expected: (<class 'str'>, <class 'NoneType'>), Got: <class 'NoneType'>",
+      "timestamp": "2026-01-07T00:18:11.754046"
+    },
+    {
+      "test": "Type of 'simulation_time' correct",
+      "passed": true,
+      "message": "Expected: (<class 'int'>, <class 'float'>), Got: <class 'float'>",
+      "timestamp": "2026-01-07T00:18:11.754048"
+    },
+    {
+      "test": "Type of 'scheduled_tasks' correct",
+      "passed": true,
+      "message": "Expected: <class 'list'>, Got: <class 'list'>",
+      "timestamp": "2026-01-07T00:18:11.754050"
+    },
+    {
+      "test": "'temperature' always in range [25.0, 115.0]",
+      "passed": true,
+      "message": "Min: 63.00, Max: 70.50",
+      "timestamp": "2026-01-07T00:18:12.083293"
+    },
+    {
+      "test": "'rpm' always in range [0, 3000]",
+      "passed": true,
+      "message": "Min: 515.00, Max: 560.00",
+      "timestamp": "2026-01-07T00:18:12.083308"
+    },
+    {
+      "test": "'oil_pressure_psi' always in range [0.0, 80.0]",
+      "passed": true,
+      "message": "Min: 43.50, Max: 45.90",
+      "timestamp": "2026-01-07T00:18:12.083312"
+    },
+    {
+      "test": "'vibration_mms' always in range [0.0, 50.0]",
+      "passed": true,
+      "message": "Min: 7.20, Max: 10.90",
+      "timestamp": "2026-01-07T00:18:12.083316"
+    },
+    {
+      "test": "'voltage_v' always in range [10.0, 15.0]",
+      "passed": true,
+      "message": "Min: 13.30, Max: 13.40",
+      "timestamp": "2026-01-07T00:18:12.083320"
+    },
+    {
+      "test": "NORMAL \u2192 ALERT_HIGH transition occurs",
+      "passed": true,
+      "message": "After 15 ticks",
+      "timestamp": "2026-01-07T00:18:12.673138"
+    },
+    {
+      "test": "ALERT_HIGH \u2192 NORMAL recovery occurs",
+      "passed": true,
+      "message": "After 96 ticks",
+      "timestamp": "2026-01-07T00:18:15.777445"
+    },
+    {
+      "test": "ML models can be loaded",
+      "passed": true,
+      "message": "3 models loaded: fault_detector, vibration_detector, pressure_predictor",
+      "timestamp": "2026-01-07T00:18:15.779916"
+    },
+    {
+      "test": "Response includes ml_insights",
+      "passed": true,
+      "message": "",
+      "timestamp": "2026-01-07T00:18:15.808612"
+    },
+    {
+      "test": "ml_insights includes fault_detection",
+      "passed": true,
+      "message": "",
+      "timestamp": "2026-01-07T00:18:15.808617"
+    },
+    {
+      "test": "ml_insights includes vibration_anomaly",
+      "passed": true,
+      "message": "",
+      "timestamp": "2026-01-07T00:18:15.808618"
+    },
+    {
+      "test": "ml_insights includes pressure_prediction",
+      "passed": true,
+      "message": "",
+      "timestamp": "2026-01-07T00:18:15.808620"
+    },
+    {
+      "test": "Pressure prediction includes predicted_pressure",
+      "passed": true,
+      "message": "Value: 38.47 PSI",
+      "timestamp": "2026-01-07T00:18:15.808623"
+    },
+    {
+      "test": "Alerts are triggered on temperature spike",
+      "passed": true,
+      "message": "Alert occurred 2 times during 100 ticks",
+      "timestamp": "2026-01-07T00:18:18.980994"
+    },
+    {
+      "test": "Scheduled tasks are generated",
+      "passed": true,
+      "message": "Found 1 task(s)",
+      "timestamp": "2026-01-07T00:18:22.156040"
+    },
+    {
+      "test": "Average tick time < 100ms",
+      "passed": true,
+      "message": "Actual: 31.71ms",
+      "timestamp": "2026-01-07T00:18:25.702439"
+    },
+    {
+      "test": "Max tick time < 500ms",
+      "passed": true,
+      "message": "Actual: 33.98ms",
+      "timestamp": "2026-01-07T00:18:25.702451"
+    },
+    {
+      "test": "P95 tick time < 200ms",
+      "passed": true,
+      "message": "Actual: 33.25ms",
+      "timestamp": "2026-01-07T00:18:25.702454"
+    },
+    {
+      "test": "Extended run completes without crashes",
+      "passed": true,
+      "message": "Completed 9427 ticks in 300.0s",
+      "timestamp": "2026-01-07T00:23:25.720663"
+    },
+    {
+      "test": "Tick count reasonable",
+      "passed": true,
+      "message": "Expected ~300, got 9427",
+      "timestamp": "2026-01-07T00:23:25.720689"
+    },
+    {
+      "test": "Multiple states observed",
+      "passed": false,
+      "message": "States: NORMAL",
+      "timestamp": "2026-01-07T00:23:25.720693"
+    },
+    {
+      "test": "Reset returns to NORMAL state",
+      "passed": true,
+      "message": "State: NORMAL",
+      "timestamp": "2026-01-07T00:23:27.374927"
+    },
+    {
+      "test": "Reset clears alert_message",
+      "passed": true,
+      "message": "Message: None",
+      "timestamp": "2026-01-07T00:23:27.374937"
+    },
+    {
+      "test": "Reset returns simulation_time to ~0",
+      "passed": true,
+      "message": "Time: 0.50s",
+      "timestamp": "2026-01-07T00:23:27.374940"
+    },
+    {
+      "test": "Fault injection causes temperature variation",
+      "passed": true,
+      "message": "Variation: 70.00\u00b0F",
+      "timestamp": "2026-01-07T00:23:30.631414"
+    },
+    {
+      "test": "Fault injection disables correctly",
+      "passed": true,
+      "message": "Variation after disable: 12.20\u00b0F",
+      "timestamp": "2026-01-07T00:23:32.212594"
+    }
+  ]
+}

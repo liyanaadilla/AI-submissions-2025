@@ -1,0 +1,496 @@
+[
+  {
+    "timestamp": 1767708926.404432,
+    "temperature": 72.5,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 0.5
+  },
+  {
+    "timestamp": 1767708926.904432,
+    "temperature": 75.0,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 1.0
+  },
+  {
+    "timestamp": 1767708927.404432,
+    "temperature": 77.5,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 1.5
+  },
+  {
+    "timestamp": 1767708927.904432,
+    "temperature": 80.0,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 2.0
+  },
+  {
+    "timestamp": 1767708928.404432,
+    "temperature": 80.2,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 2.5
+  },
+  {
+    "timestamp": 1767708928.904432,
+    "temperature": 91.0,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 3.0
+  },
+  {
+    "timestamp": 1767708929.404432,
+    "temperature": 84.0,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 3.5
+  },
+  {
+    "timestamp": 1767708929.904432,
+    "temperature": 81.9,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 4.0
+  },
+  {
+    "timestamp": 1767708930.404432,
+    "temperature": 79.0,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 4.5
+  },
+  {
+    "timestamp": 1767708930.904432,
+    "temperature": 87.1,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 5.0
+  },
+  {
+    "timestamp": 1767708931.404432,
+    "temperature": 89.8,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [
+      {
+        "task_id": "persist_0",
+        "payload": {
+          "type": "persistence",
+          "timestamp": 1767708930.904432,
+          "temperature": 87.1,
+          "state": "NORMAL"
+        },
+        "due_time": 1767708930.904432
+      }
+    ],
+    "simulation_time": 5.5
+  },
+  {
+    "timestamp": 1767708931.904432,
+    "temperature": 98.9,
+    "state": "NORMAL",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 6.0
+  },
+  {
+    "timestamp": 1767708932.404432,
+    "temperature": 106.8,
+    "state": "ALERT_HIGH",
+    "state_changed": true,
+    "alert_message": "High temperature alert: 85.0\u00b0F threshold exceeded",
+    "scheduled_tasks": [],
+    "simulation_time": 6.5
+  },
+  {
+    "timestamp": 1767708932.904432,
+    "temperature": 111.6,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 7.0
+  },
+  {
+    "timestamp": 1767708933.404432,
+    "temperature": 105.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 7.5
+  },
+  {
+    "timestamp": 1767708933.904432,
+    "temperature": 113.7,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 8.0
+  },
+  {
+    "timestamp": 1767708934.404432,
+    "temperature": 107.1,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 8.5
+  },
+  {
+    "timestamp": 1767708934.904432,
+    "temperature": 116.6,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 9.0
+  },
+  {
+    "timestamp": 1767708935.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 9.5
+  },
+  {
+    "timestamp": 1767708935.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 10.0
+  },
+  {
+    "timestamp": 1767708936.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [
+      {
+        "task_id": "persist_1",
+        "payload": {
+          "type": "persistence",
+          "timestamp": 1767708935.904432,
+          "temperature": 120.0,
+          "state": "ALERT_HIGH"
+        },
+        "due_time": 1767708935.904432
+      }
+    ],
+    "simulation_time": 10.5
+  },
+  {
+    "timestamp": 1767708936.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 11.0
+  },
+  {
+    "timestamp": 1767708937.404432,
+    "temperature": 117.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 11.5
+  },
+  {
+    "timestamp": 1767708937.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 12.0
+  },
+  {
+    "timestamp": 1767708938.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 12.5
+  },
+  {
+    "timestamp": 1767708938.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 13.0
+  },
+  {
+    "timestamp": 1767708939.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 13.5
+  },
+  {
+    "timestamp": 1767708939.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 14.0
+  },
+  {
+    "timestamp": 1767708940.404432,
+    "temperature": 117.9,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 14.5
+  },
+  {
+    "timestamp": 1767708940.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 15.0
+  },
+  {
+    "timestamp": 1767708941.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [
+      {
+        "task_id": "persist_2",
+        "payload": {
+          "type": "persistence",
+          "timestamp": 1767708940.904432,
+          "temperature": 120.0,
+          "state": "ALERT_HIGH"
+        },
+        "due_time": 1767708940.904432
+      }
+    ],
+    "simulation_time": 15.5
+  },
+  {
+    "timestamp": 1767708941.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 16.0
+  },
+  {
+    "timestamp": 1767708942.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 16.5
+  },
+  {
+    "timestamp": 1767708942.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 17.0
+  },
+  {
+    "timestamp": 1767708943.404432,
+    "temperature": 109.6,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 17.5
+  },
+  {
+    "timestamp": 1767708943.904432,
+    "temperature": 113.1,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 18.0
+  },
+  {
+    "timestamp": 1767708944.404432,
+    "temperature": 116.2,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 18.5
+  },
+  {
+    "timestamp": 1767708944.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 19.0
+  },
+  {
+    "timestamp": 1767708945.404432,
+    "temperature": 110.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 19.5
+  },
+  {
+    "timestamp": 1767708945.904432,
+    "temperature": 106.1,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 20.0
+  },
+  {
+    "timestamp": 1767708946.404432,
+    "temperature": 104.1,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [
+      {
+        "task_id": "persist_3",
+        "payload": {
+          "type": "persistence",
+          "timestamp": 1767708945.904432,
+          "temperature": 106.1,
+          "state": "ALERT_HIGH"
+        },
+        "due_time": 1767708945.904432
+      }
+    ],
+    "simulation_time": 20.5
+  },
+  {
+    "timestamp": 1767708946.904432,
+    "temperature": 113.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 21.0
+  },
+  {
+    "timestamp": 1767708947.404432,
+    "temperature": 109.2,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 21.5
+  },
+  {
+    "timestamp": 1767708947.904432,
+    "temperature": 116.8,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 22.0
+  },
+  {
+    "timestamp": 1767708948.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 22.5
+  },
+  {
+    "timestamp": 1767708948.904432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 23.0
+  },
+  {
+    "timestamp": 1767708949.404432,
+    "temperature": 120.0,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 23.5
+  },
+  {
+    "timestamp": 1767708949.904432,
+    "temperature": 115.7,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 24.0
+  },
+  {
+    "timestamp": 1767708950.404432,
+    "temperature": 114.4,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 24.5
+  },
+  {
+    "timestamp": 1767708950.904432,
+    "temperature": 116.5,
+    "state": "ALERT_HIGH",
+    "state_changed": false,
+    "alert_message": null,
+    "scheduled_tasks": [],
+    "simulation_time": 25.0
+  }
+]
