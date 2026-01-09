@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1rem;
+        }
+        .main-content {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .video-section {
+            flex: 1;
+            max-width: 500px;
+        }
+        .video-container {
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            aspect-ratio: 4/3;
+            position: relative;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .detection-section {
+            flex: 1;
+            max-width: 500px;
+        }
+        .detection-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .detection-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .detected-objects {
+            min-height: 150px;
+        }
+        .detection-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .detection-item .fruit-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .detection-item .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .detection-item .label {
+            color: #666;
+        }
+        .detection-item .value {
+            font-weight: 600;
+            color: #333;
+        }
+        .harvestability-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        .recommendation {
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .no-detection {
+            text-align: center;
+            color: #888;
+            padding: 40px 20px;
+        }
+        .no-detection .icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #28a745;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .camera-switch-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .camera-switch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+        .camera-switch-btn:active {
+            transform: translateY(0);
+        }
+        .camera-switch-btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            .video-section, .detection-section {
+                max-width: 100%;
+                width: 100%;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍌 Banana Ripeness Detection</h1>
+            <p class="subtitle">Point your camera at a banana to analyze its ripeness</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="overlay"></canvas>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="camera-status">Camera Active - Scanning...</span>
+                </div>
+                <div class="camera-controls">
+                    <button id="switch-camera-btn" class="camera-switch-btn" onclick="switchCamera()">
+                        🔄 Switch Camera
+                    </button>
+                </div>
+            </div>
+            
+            <div class="detection-section">
+                <div class="detection-card">
+                    <h2>📊 Detection Results</h2>
+                    <div class="detected-objects" id="detected-objects">
+                        <div class="no-detection">
+                            <div class="icon">🔍</div>
+                            <p>No banana detected yet.<br>Point your camera at a banana.</p>
+                        </div>
+                    </div>
+                    <a href="/" class="back-btn">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const ctx = overlay.getContext('2d');
+        const detectedObjectsElement = document.getElementById('detected-objects');
+        const switchBtn = document.getElementById('switch-camera-btn');
+        const cameraStatus = document.getElementById('camera-status');
+        let currentDetections = [];
+        let currentStream = null;
+        let useFrontCamera = false; // false = back/environment camera, true = front/user camera
+        let availableCameras = [];
+        let currentCameraIndex = 0;
+        let detectionInterval = null;
+
+        // Get list of available cameras
+        async function getAvailableCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                availableCameras = devices.filter(device => device.kind === 'videoinput');
+                console.log('Available cameras:', availableCameras.length);
+                
+                // Update button visibility based on camera count
+                if (availableCameras.length <= 1) {
+                    switchBtn.style.display = 'none';
+                } else {
+                    switchBtn.style.display = 'inline-flex';
+                }
+                return availableCameras;
+            } catch (error) {
+                console.error('Error enumerating devices:', error);
+                return [];
+            }
+        }
+
+        // Stop all tracks from current stream
+        function stopCurrentStream() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+
+        // Switch between front and back camera
+        async function switchCamera() {
+            switchBtn.disabled = true;
+            switchBtn.textContent = '⏳ Switching...';
+            
+            try {
+                stopCurrentStream();
+                
+                // Toggle camera
+                useFrontCamera = !useFrontCamera;
+                
+                // If we have device IDs, use them for more reliable switching
+                if (availableCameras.length > 1) {
+                    currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+                }
+                
+                await startCamera();
+                
+                // Update button and status text
+                const cameraType = useFrontCamera ? 'Front' : 'Back';
+                cameraStatus.textContent = `${cameraType} Camera Active - Scanning...`;
+                
+            } catch (error) {
+                console.error('Error switching camera:', error);
+                // Try to recover by using any available camera
+                useFrontCamera = !useFrontCamera;
+                await startCamera();
+            } finally {
+                switchBtn.disabled = false;
+                switchBtn.textContent = '🔄 Switch Camera';
+            }
+        }
+
+        // Start camera with current settings
+        async function startCamera() {
+            let constraints;
+            
+            // Try using deviceId first if available
+            if (availableCameras.length > 1 && availableCameras[currentCameraIndex].deviceId) {
+                constraints = {
+                    video: {
+                        deviceId: { exact: availableCameras[currentCameraIndex].deviceId }
+                    }
+                };
+            } else {
+                // Fallback to facingMode
+                constraints = {
+                    video: {
+                        facingMode: useFrontCamera ? 'user' : { ideal: 'environment' }
+                    }
+                };
+            }
+            
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                
+                video.onloadedmetadata = () => {
+                    resizeOverlay();
+                };
+                
+                return true;
+            } catch (error) {
+                console.error('Error with preferred camera, trying fallback:', error);
+                // Fallback: try any camera
+                currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = currentStream;
+                return true;
+            }
+        }
+
+        async function initializeCamera() {
+            try {
+                // First, get list of available cameras
+                await getAvailableCameras();
+                
+                // Try to start with back camera first (environment)
+                useFrontCamera = false;
+                await startCamera();
+                
+                video.onloadedmetadata = () => {
+                    resizeOverlay();
+                    drawLoop();
+                };
+                
+                // Update camera list after getting permission (labels are now available)
+                await getAvailableCameras();
+                
+                detectObjects();
+                
+            } catch (error) {
+                console.error('Error accessing the camera:', error);
+                detectedObjectsElement.innerHTML = `
+                    <div class="no-detection">
+                        <div class="icon">📷</div>
+                        <p>Camera access denied.<br>Please allow camera permissions.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function resizeOverlay() {
+            const rect = video.getBoundingClientRect();
+            overlay.width = rect.width;
+            overlay.height = rect.height;
+        }
+        window.addEventListener('resize', resizeOverlay);
+
+        function drawLoop() {
+            ctx.clearRect(0, 0, overlay.width, overlay.height);
+            
+            currentDetections.forEach(det => {
+                const { bbox, class: className, confidence, harvestability } = det;
+                // YOLO format: [x_center, y_center, width, height]
+                const [xCenter, yCenter, bboxWidth, bboxHeight] = bbox;
+                
+                // Convert from center format to corner format
+                const x1 = xCenter - bboxWidth / 2;
+                const y1 = yCenter - bboxHeight / 2;
+                const x2 = xCenter + bboxWidth / 2;
+                const y2 = yCenter + bboxHeight / 2;
+                
+                // Scale bbox to overlay size
+                const scaleX = overlay.width / video.videoWidth;
+                const scaleY = overlay.height / video.videoHeight;
+                const sx1 = x1 * scaleX;
+                const sy1 = y1 * scaleY;
+                const sx2 = x2 * scaleX;
+                const sy2 = y2 * scaleY;
+                const boxWidth = sx2 - sx1;
+                const boxHeight = sy2 - sy1;
+                
+                const color = harvestability.color;
+                
+                // Draw bounding box
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(sx1, sy1, boxWidth, boxHeight);
+                
+                // Draw corner accents
+                const cornerLen = 15;
+                ctx.lineWidth = 4;
+                // Top-left
+                ctx.beginPath();
+                ctx.moveTo(sx1, sy1 + cornerLen);
+                ctx.lineTo(sx1, sy1);
+                ctx.lineTo(sx1 + cornerLen, sy1);
+                ctx.stroke();
+                // Top-right
+                ctx.beginPath();
+                ctx.moveTo(sx2 - cornerLen, sy1);
+                ctx.lineTo(sx2, sy1);
+                ctx.lineTo(sx2, sy1 + cornerLen);
+                ctx.stroke();
+                // Bottom-left
+                ctx.beginPath();
+                ctx.moveTo(sx1, sy2 - cornerLen);
+                ctx.lineTo(sx1, sy2);
+                ctx.lineTo(sx1 + cornerLen, sy2);
+                ctx.stroke();
+                // Bottom-right
+                ctx.beginPath();
+                ctx.moveTo(sx2 - cornerLen, sy2);
+                ctx.lineTo(sx2, sy2);
+                ctx.lineTo(sx2, sy2 - cornerLen);
+                ctx.stroke();
+                
+                // Draw label background
+                const ripeness = className.split(' ')[0];
+                const label = `${ripeness} ${Math.round(confidence * 100)}%`;
+                ctx.font = 'bold 14px Segoe UI';
+                const textWidth = ctx.measureText(label).width;
+                const labelHeight = 24;
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(sx1, sy1 - labelHeight, textWidth + 16, labelHeight);
+                
+                // Draw label text
+                ctx.fillStyle = 'white';
+                ctx.fillText(label, sx1 + 8, sy1 - 7);
+            });
+            
+            requestAnimationFrame(drawLoop);
+        }
+
+        function detectObjects() {
+            setInterval(() => {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth;
+                tempCanvas.height = video.videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+                const imageData = tempCanvas.toDataURL('image/jpeg');
+
+                fetch('/detect_objects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_data: imageData }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    currentDetections = data;
+                    
+                    if (data.length === 0) {
+                        detectedObjectsElement.innerHTML = `
+                            <div class="no-detection">
+                                <div class="icon">🔍</div>
+                                <p>No banana detected yet.<br>Point your camera at a banana.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    detectedObjectsElement.innerHTML = '';
+                    data.forEach(object => {
+                        const { class: className, confidence, harvestability } = object;
+                        const ripeness = className.split(' ')[0];
+                        const fruitName = className.split(' ').slice(1).join(' ') || 'Banana';
+
+                        const item = document.createElement('div');
+                        item.className = 'detection-item';
+                        item.innerHTML = `
+                            <div class="fruit-name">🍌 ${fruitName}</div>
+                            <div class="info-row">
+                                <span class="label">Ripeness:</span>
+                                <span class="value">${ripeness}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Confidence:</span>
+                                <span class="value">${Math.round(confidence * 100)}%</span>
+                            </div>
+                            <div class="harvestability-badge" style="background-color: ${harvestability.color};">
+                                ${harvestability.status}
+                            </div>
+                            <div class="recommendation">
+                                📋 ${harvestability.recommendation}
+                            </div>
+                        `;
+                        detectedObjectsElement.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error detecting objects:', error);
+                });
+            }, 1000);
+        }
+
+        initializeCamera();
+    </script>
+</body>
+</html>
