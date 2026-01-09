@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard">
+    <h1>AI Task Automation Dashboard</h1>
+    
+    <div class="control-panel">
+        <h2>Simulation Controls</h2>
+        <div class="control-buttons">
+            <button id="btn-step" class="btn btn-primary">⏭ Next Step</button>
+            <button id="btn-auto-run" class="btn btn-secondary"> ▷ Run AI</button>
+            <button id="btn-reset" class="btn btn-danger">↺ Reset</button>
+        </div>
+        <div class="step-counter">
+            <span>Current Step: </span>
+            <span id="current-step">0</span>
+        </div>
+    </div>
+    
+    <!-- System Overview Section -->
+    <div class="system-overview-section">
+        <h2>System Overview</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon" style="background: rgba(59, 130, 246, 0.2);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-value" id="active-tasks">0</p>
+                    <p class="metric-label">Active Tasks</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon" style="background: rgba(34, 197, 94, 0.2);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-value" id="available-workers">3</p>
+                    <p class="metric-label">Available Workers</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon" style="background: rgba(168, 85, 247, 0.2);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2"/>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-value" id="healthy-machines">3</p>
+                    <p class="metric-label">Healthy Machines</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon" style="background: rgba(239, 68, 68, 0.2);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-value" id="critical-alerts">0</p>
+                    <p class="metric-label">Critical Alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Performance Metrics Section -->
+    <div class="performance-metrics-section">
+        <h2>Performance Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Avg Task Time</h3>
+                <p class="metric-value" id="metric-task-time">0.0</p>
+                <span class="metric-unit">minutes</span>
+            </div>
+            <div class="metric-card">
+                <h3>Error Reduction</h3>
+                <p class="metric-value" id="metric-error-rate">0</p>
+                <span class="metric-unit">%</span>
+            </div>
+            <div class="metric-card">
+                <h3>Downtime Avoided</h3>
+                <p class="metric-value" id="metric-downtime">0</p>
+                <span class="metric-unit">hours</span>
+            </div>
+            <div class="metric-card">
+                <h3>Resource Efficiency</h3>
+                <p class="metric-value" id="metric-efficiency">0</p>
+                <span class="metric-unit">%</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Action History -->
+    <div class="action-log-section">
+        <h2>AI Action History</h2>
+        <div id="action-log" class="action-log"></div>
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+{% endblock %}

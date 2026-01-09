@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Automation System</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20z"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1>AI Task Automation System</h1>
+                    <p>Intelligent agent for industrial operations management</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <button class="nav-item active" data-page="home">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                </svg>
+                <span>Overview</span>
+            </button>
+            <button class="nav-item" data-page="tasks">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"/>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                <span>Tasks & Progress</span>
+            </button>
+            <button class="nav-item" data-page="operations">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2"/>
+                </svg>
+                <span>Workers & Machines</span>
+            </button>
+            <button class="nav-item" data-page="resources">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>Resources & Alerts</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Page -->
+            <div id="page-home" class="page-content active">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Tasks Page -->
+            <div id="page-tasks" class="page-content">
+                <div class="section-card">
+                    <h2>Tasks Progress</h2>
+                    <div id="tasks-progress-bar" class="progress-bar"></div>
+                    <div id="tasks-container" class="tasks-grid"></div>
+                </div>
+            </div>
+
+            <!-- Operations Page -->
+            <div id="page-operations" class="page-content">
+                <div class="section-card">
+                    <h2>Available Workers</h2>
+                    <div id="workers-container" class="workers-grid"></div>
+                </div>
+                <div class="section-card">
+                    <h2>Machine Conditions</h2>
+                    <div id="machines-container" class="machines-grid"></div>
+                </div>
+            </div>
+
+            <!-- Resources Page -->
+            <div id="page-resources" class="page-content">
+                <div class="section-card">
+                    <h2>Resource Allocation</h2>
+                    <div id="resources-container" class="resources-grid"></div>
+                </div>
+                
+                <div class="section-card">
+                    <h2>Alert Triggers</h2>
+                    <div id="alerts-container" class="alerts-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>AI Task Automation System - Educational POC demonstrating PEAS model and state space search</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
